@@ -1,0 +1,117 @@
+# DecoCake Shop — comandos para copiar (Linode)
+# Dónde: Bitvise SSH = usercodex@198.58.117.160
+# phpMyAdmin = solo para VER tablas. Crear la BD y los SPs NO van ahí.
+#
+# Puerto Gunicorn: 8004  (8000 restaurante, 8003 academia)
+# Carpetas:  ~/decocake_src    ~/decocake_front
+# Subdominio: decocake.usercodex.com
+
+# =============================================================================
+# AHORA — consola SSH (Bitvise)
+# Arregla el error #1044 de phpMyAdmin
+# =============================================================================
+
+sudo mysql
+
+# Dentro de mysql pega esto y Enter:
+
+CREATE DATABASE IF NOT EXISTS DecoCakeShop
+  CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+GRANT ALL PRIVILEGES ON DecoCakeShop.* TO 'usercodex'@'localhost';
+FLUSH PRIVILEGES;
+SHOW DATABASES;
+EXIT;
+
+# Después recarga phpMyAdmin (F5). Debes ver DecoCakeShop.
+# NO importes los .sql de SQL Server en phpMyAdmin. Quedará vacía hasta
+# que carguemos los scripts MySQL con Python (paso 4).
+
+# =============================================================================
+# 1) DNS — Linode Cloud Manager (navegador, no consola)
+# =============================================================================
+# Domains → usercodex.com → Add an A record:
+#   Hostname: decocake
+#   IP:       198.58.117.160
+
+# =============================================================================
+# 2) Código en el servidor — consola SSH
+# =============================================================================
+# Opción A: si el repo ya está en GitHub (cambia la URL):
+
+cd ~
+git clone https://github.com/TU_USUARIO/DecoCakeShop.git decocake_src
+
+# Opción B: si aún no hay GitHub, sube el proyecto por SFTP
+#   Local:  D:\Startup\DecoCakeShop
+#   Remoto: /home/usercodex/decocake_src
+#   (incluye Backend y Frontend; no subas Backend/.venv ni Frontend/node_modules)
+
+# =============================================================================
+# 3) .env de producción — consola SSH
+# =============================================================================
+# Copia la misma contraseña MySQL que ya usas (Academia):
+
+grep DB_PASSWORD ~/academia_src/Backend/.env
+
+cd ~/decocake_src/Backend
+cp deploy/env.production.example .env
+nano .env
+
+# En nano: pega esa contraseña en DB_PASSWORD
+# SECRET_KEY: cambia el texto
+# Ctrl+O Enter  Ctrl+X
+
+# =============================================================================
+# 4) Instalar backend + cargar MySQL — consola SSH
+# =============================================================================
+# Requiere que ya existan db_scripts_mysql/ (conversión hecha en tu PC).
+
+cd ~/decocake_src/Backend
+chmod +x scripts/bootstrap_server.sh
+./scripts/bootstrap_server.sh
+
+# =============================================================================
+# 5) Gunicorn — consola SSH
+# =============================================================================
+
+sudo cp ~/decocake_src/Backend/deploy/gunicorn-decocake.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable gunicorn-decocake
+sudo systemctl start gunicorn-decocake
+sudo systemctl status gunicorn-decocake --no-pager
+
+# =============================================================================
+# 6) Frontend — PowerShell EN TU PC (no en Linode)
+# =============================================================================
+
+cd D:\Startup\DecoCakeShop\Frontend
+npm install
+npm run build
+
+# Luego SFTP: sube la carpeta Frontend/dist/*  →  /home/usercodex/decocake_front/
+
+# En SSH, si la carpeta no existe:
+mkdir -p ~/decocake_front
+
+# =============================================================================
+# 7) Apache — consola SSH
+# =============================================================================
+
+sudo cp ~/decocake_src/Backend/deploy/decocake.usercodex.com.conf /etc/apache2/sites-available/
+sudo a2enmod proxy proxy_http rewrite
+sudo a2ensite decocake.usercodex.com.conf
+sudo chown -R usercodex:www-data /home/usercodex/decocake_front
+sudo chown -R usercodex:www-data /home/usercodex/decocake_src/Backend/staticfiles
+sudo apache2ctl configtest && sudo systemctl reload apache2
+
+# =============================================================================
+# 8) HTTPS — consola SSH
+# =============================================================================
+
+sudo certbot --apache -d decocake.usercodex.com
+
+# =============================================================================
+# Si algo falla
+# =============================================================================
+sudo journalctl -u gunicorn-decocake -n 80 --no-pager
+sudo tail -n 50 /var/log/apache2/decocake_error.log

@@ -1,0 +1,72 @@
+.pago-detalle-modal {
+  width: min(760px, 94vw);
+}
+
+.pago-detalle-modal .modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.pago-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0 0 1rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border, #e3e6ef);
+  border-radius: 8px;
+  background: #fafbfd;
+}
+
+@media (min-width: 720px) {
+  .pago-meta {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.pago-meta-item {
+  min-width: 0;
+}
+
+.pago-meta dt {
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #5c6478);
+  margin: 0;
+}
+
+.pago-meta dd {
+  margin: 0.2rem 0 0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.pago-meta-monto {
+  color: var(--color-primary, #e1147a);
+}
+
+.pago-resumen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.pago-resumen div {
+  background: #fffafc;
+  border: 1px solid #f0dce4;
+  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+}
+
+.pago-resumen span {
+  display: block;
+  font-size: 0.75rem;
+  color: #8a6a72;
+}
+
+.pago-resumen strong {
+  font-size: 1.05rem;
+  color: #3a2418;
+}

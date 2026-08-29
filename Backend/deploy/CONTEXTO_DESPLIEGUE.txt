@@ -1,0 +1,7 @@
+# DecoCake Shop — Linode
+# IP 198.58.117.160  usuario SSH usercodex
+# Gunicorn 127.0.0.1:8004
+# Código: /home/usercodex/decocake_src
+# Front:  /home/usercodex/decocake_front
+# BD:     DecoCakeShop  (GRANT explícito; phpMyAdmin no puede CREATE)
+# Carga:  python scripts/setup_mysql_db.py  (no phpMyAdmin)

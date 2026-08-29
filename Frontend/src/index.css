@@ -1,0 +1,22 @@
+:root {
+  font-size: 18px;
+  color-scheme: light;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  overscroll-behavior-x: none;
+}
+
+#root {
+  min-height: 100vh;
+}

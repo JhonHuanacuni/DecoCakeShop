@@ -1,0 +1,128 @@
+[
+  {
+    "name": "cortador y alisador",
+    "description": "XZCZZX",
+    "price": "12.00",
+    "image": "/shop-products/01-cortador-y-alisador.png",
+    "active": true
+  },
+  {
+    "name": "ESTATULAS X3 UND",
+    "description": "ESPATULAS POR 3 UNIDADES",
+    "price": "8.00",
+    "image": "/shop-products/02-estatulas-x3-und.jpeg",
+    "active": true
+  },
+  {
+    "name": "SORBETONES",
+    "description": "SORBETONES X 50 UNDS",
+    "price": "7.00",
+    "image": "/shop-products/03-sorbetones.png",
+    "active": true
+  },
+  {
+    "name": "TAPER BOMBONERA",
+    "description": "Tapa alta.\r\nMaterial Pet.\r\nMedida: 8 onz.",
+    "price": "35.00",
+    "image": "/shop-products/04-taper-bombonera.png",
+    "active": true
+  },
+  {
+    "name": "BOLS DE ACERO X7UND",
+    "description": "SE DE 7 BOWLS METALICOS \r\nMEDIDAS 18/20/22/24/26/28/30",
+    "price": "58.00",
+    "image": "/shop-products/05-bols-de-acero-x7und.png",
+    "active": true
+  },
+  {
+    "name": "RODILLO DE ACERO 40 CM",
+    "description": "RODILLO DE ACERO CON MEDIDAS",
+    "price": "18.00",
+    "image": "/shop-products/06-rodillo-de-acero-40-cm.png",
+    "active": true
+  },
+  {
+    "name": "RODILLO ACRILICO 23 CM",
+    "description": "RODILLO ACRILICO DE 23 CM",
+    "price": "8.00",
+    "image": "/shop-products/07-rodillo-acrilico-23-cm.png",
+    "active": true
+  },
+  {
+    "name": "RODILLO ACRILICO 40 CM",
+    "description": "RODILLO ACRILICO 40 CM",
+    "price": "15.00",
+    "image": "/shop-products/08-rodillo-acrilico-40-cm.png",
+    "active": true
+  },
+  {
+    "name": "RODILLO EN ACRILICO 50 CM",
+    "description": "RODILLO ACRILICO 50 CM",
+    "price": "19.00",
+    "image": "/shop-products/09-rodillo-en-acrilico-50-cm.png",
+    "active": true
+  },
+  {
+    "name": "MINI GRAMERA",
+    "description": "MINI GRAMERA",
+    "price": "15.00",
+    "image": "/shop-products/10-mini-gramera.png",
+    "active": true
+  },
+  {
+    "name": "BALANZA CLASICA",
+    "description": "BALANZA CLASICA HASTA 5KG\r\nUNICO COLOR ROSADA",
+    "price": "12.00",
+    "image": "/shop-products/11-balanza-clasica.png",
+    "active": true
+  },
+  {
+    "name": "KEKERA RECTANGULAR X5 UND",
+    "description": "MEDIDAS:",
+    "price": "32.00",
+    "image": "/shop-products/12-kekera-rectangular-x5-und.jpeg",
+    "active": true
+  },
+  {
+    "name": "BALANZA DE CORAZON",
+    "description": "BALANZA DE CORAZON HASTA 5KG",
+    "price": "25.00",
+    "image": "/shop-products/13-balanza-de-corazon.png",
+    "active": true
+  },
+  {
+    "name": "BALANZA DE VIDRIO",
+    "description": "BALANZA DE VIDRIO HASTA 5 KL",
+    "price": "20.00",
+    "image": "/shop-products/14-balanza-de-vidrio.png",
+    "active": true
+  },
+  {
+    "name": "KEKERA CORAZÓN X5 UND",
+    "description": "MEDIDAS:",
+    "price": "32.00",
+    "image": "/shop-products/15-kekera-coraz-n-x5-und.jpeg",
+    "active": true
+  },
+  {
+    "name": "KEKERAS CUADRADAS X5 UND",
+    "description": "MEDIDAS: \r\n15*15CM\r\n20*20CM\r\n25*25CM\r\n30*30CM\r\n35*35CM",
+    "price": "32.00",
+    "image": "/shop-products/16-kekeras-cuadradas-x5-und.jpeg",
+    "active": true
+  },
+  {
+    "name": "MOLDE KEKE INGLES X3 UND",
+    "description": "MEDIDAS: \r\n22*11 CM\r\n28*11 CM\r\n32*11 CM",
+    "price": "14.00",
+    "image": "/shop-products/17-molde-keke-ingles-x3-und.jpeg",
+    "active": true
+  },
+  {
+    "name": "TERRINAS X3 UNIDADES",
+    "description": "MEDIDAS:\r\n15 tajadas (22*10cm)\r\n18 tajadas (28*10cm) \r\n25 tajadas (32*10cm)",
+    "price": "26.00",
+    "image": "/shop-products/18-terrinas-x3-unidades.jpeg",
+    "active": true
+  }
+]

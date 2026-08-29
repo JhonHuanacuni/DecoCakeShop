@@ -1,0 +1,19 @@
+[Unit]
+Description=Gunicorn — DecoCake Shop API
+After=network.target mysql.service
+
+[Service]
+User=usercodex
+Group=www-data
+WorkingDirectory=/home/usercodex/decocake_src/Backend
+EnvironmentFile=/home/usercodex/decocake_src/Backend/.env
+ExecStart=/home/usercodex/decocake_src/Backend/venv/bin/gunicorn \
+    --workers 3 \
+    --bind 127.0.0.1:8004 \
+    --timeout 120 \
+    backend_project.wsgi:application
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

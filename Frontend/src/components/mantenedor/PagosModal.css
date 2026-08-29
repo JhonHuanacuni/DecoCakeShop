@@ -1,0 +1,54 @@
+.pagos-cliente {
+  margin: 0 0 0.85rem;
+  color: #6b4a52;
+  font-size: 0.9rem;
+}
+.pagos-resumen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+.pagos-resumen div {
+  background: #fffafc;
+  border: 1px solid #f0dce4;
+  border-radius: 10px;
+  padding: 0.65rem 0.8rem;
+}
+.pagos-resumen span { display: block; font-size: 0.75rem; color: #8a6a72; }
+.pagos-resumen strong { font-size: 1.05rem; color: #3a2418; }
+.pagos-table-wrap { overflow-x: hidden; max-height: 260px; overflow-y: auto; }
+.pagos-abono {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px dashed #ead5dc;
+}
+.pagos-abono h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.95rem;
+  color: #4a2418;
+}
+.pagos-abono-row {
+  display: flex;
+  gap: 0.65rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.pagos-abono-row .cotiz-label { flex: 1; min-width: 180px; }
+.pagos-abono-row input,
+.pagos-abono-row select {
+  width: 100%;
+  border: 1px solid #ead5dc;
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+}
+.cotiz-label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #4a2418;
+}
+.cotiz-empty { margin: 0; color: #8a6a72; font-size: 0.82rem; }

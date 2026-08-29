@@ -1,0 +1,158 @@
+.auditoria-filtros {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--color-border, #e3e6ef);
+  background: #fafbfd;
+}
+
+.auditoria-filtros label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--color-text-muted, #5c6478);
+  min-width: 140px;
+}
+
+.auditoria-filtros select,
+.auditoria-filtros input {
+  font-size: 0.84rem;
+  padding: 0.45rem 0.55rem;
+  border: 1px solid var(--color-border, #e3e6ef);
+  border-radius: 6px;
+  background: #fff;
+}
+
+.auditoria-accion {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.auditoria-accion--insert {
+  background: #e8f7ee;
+  color: #1f7a43;
+}
+
+.auditoria-accion--update {
+  background: #fff4e5;
+  color: #a35b00;
+}
+
+.auditoria-accion--delete {
+  background: #fdecec;
+  color: #b42318;
+}
+
+.auditoria-detalle-modal {
+  width: min(920px, 94vw);
+}
+
+.auditoria-detalle-modal .modal-body {
+  overflow-x: hidden;
+}
+
+.auditoria-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  margin-bottom: 0.85rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--color-border, #e3e6ef);
+  border-radius: 8px;
+  background: #fafbfd;
+}
+
+@media (min-width: 720px) {
+  .auditoria-meta {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.auditoria-meta-item {
+  min-width: 0;
+}
+
+.auditoria-meta-item--full {
+  grid-column: 1 / -1;
+  padding-top: 0.35rem;
+  border-top: 1px dashed var(--color-border, #e3e6ef);
+}
+
+.auditoria-meta dt {
+  font-size: 0.72rem;
+  color: var(--color-text-muted, #5c6478);
+  margin: 0;
+}
+
+.auditoria-meta dd {
+  margin: 0.2rem 0 0;
+  font-size: 0.86rem;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.auditoria-meta-id {
+  display: block;
+  font-family: ui-monospace, "Cascadia Code", "Consolas", monospace;
+  font-size: 0.76rem;
+  font-weight: 500;
+  line-height: 1.45;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+  color: var(--color-text, #1c2333);
+  background: #fff;
+  border: 1px solid var(--color-border, #e3e6ef);
+  border-radius: 6px;
+  padding: 0.45rem 0.55rem;
+  max-height: 4.5rem;
+  overflow-y: auto;
+}
+
+.auditoria-meta-item dd .auditoria-accion {
+  font-size: 0.75rem;
+}
+
+.auditoria-json-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+@media (max-width: 800px) {
+  .auditoria-json-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.auditoria-json-panel {
+  border: 1px solid var(--color-border, #e3e6ef);
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.auditoria-json-panel h4 {
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+  font-size: 0.78rem;
+  background: var(--color-primary-soft, #fde8f2);
+  color: var(--color-primary, #e1147a);
+}
+
+.auditoria-json-panel pre {
+  margin: 0;
+  padding: 0.75rem;
+  max-height: 320px;
+  overflow: auto;
+  font-size: 0.72rem;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
