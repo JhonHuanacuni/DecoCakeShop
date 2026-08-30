@@ -80,7 +80,8 @@ CREATE PROCEDURE usp_usuario_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-IF p_Pagina < 1 THEN SET p_Pagina = 1; END IF;
+DECLARE v_offset INT DEFAULT 0;
+    IF p_Pagina < 1 THEN SET p_Pagina = 1; END IF;
     IF p_TamanioPagina < 1 THEN SET p_TamanioPagina = 10; END IF;
     SELECT COUNT(*) INTO p_TotalRegistros
     FROM USUARIO u
@@ -89,6 +90,7 @@ IF p_Pagina < 1 THEN SET p_Pagina = 1; END IF;
            OR u.APELLIDO LIKE CONCAT('%', p_Buscar, '%') OR u.DNI LIKE CONCAT('%', p_Buscar, '%') OR u.EMAIL LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado = '' OR u.ESTADO = p_Estado);
 
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT u.IDUSUARIO, u.NOMBRE, u.APELLIDO, u.DNI, u.EMAIL, u.TELEFONO, u.DIRECCION, u.ESTADO,
            u.IDTIPOUSUARIO, t.DESCRIPCION AS TIPOUSUARIO_DESCRIPCION,
            u.CREADOPOR, u.FECHACREACION, u.HORACREACION, u.MODIFICADOPOR, u.FECHAMODIFICACION, u.HORAMODIFICACION
@@ -107,7 +109,7 @@ IF p_Pagina < 1 THEN SET p_Pagina = 1; END IF;
         CASE WHEN p_OrdenarPor='ESTADO' AND p_Direccion='ASC' THEN u.ESTADO END ASC,
         CASE WHEN p_OrdenarPor='ESTADO' AND p_Direccion='DESC' THEN u.ESTADO END DESC,
         u.IDUSUARIO
-    LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;

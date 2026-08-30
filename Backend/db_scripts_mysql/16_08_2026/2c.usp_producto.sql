@@ -20,12 +20,14 @@ CREATE PROCEDURE usp_producto_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-SELECT COUNT(*) INTO p_TotalRegistros
+DECLARE v_offset INT DEFAULT 0;
+    SELECT COUNT(*) INTO p_TotalRegistros
     FROM PRODUCTO p
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR p.NOMBRE LIKE CONCAT('%', p_Buscar, '%') OR p.IDPRODUCTO LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR p.ESTADO=p_Estado)
       AND (p_IdCategoria IS NULL OR p_IdCategoria='' OR p.IDCATEGORIA=p_IdCategoria);
 
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT p.IDPRODUCTO, p.NOMBRE, p.DESCRIPCION, p.PRECIO, p.STOCK, p.IDCATEGORIA, c.NOMBRE AS CATEGORIA_NOMBRE,
            p.IDUNIDAD, u.NOMBRE AS UNIDAD_NOMBRE, p.ESTADO,
            CASE WHEN p.FOTO IS NULL OR CHAR_LENGTH(p.FOTO)=0 THEN 0 ELSE 1 END AS TIENE_FOTO,
@@ -49,7 +51,7 @@ SELECT COUNT(*) INTO p_TotalRegistros
         CASE WHEN p_OrdenarPor='STOCK' AND p_Direccion='ASC' THEN p.STOCK END ASC,
         CASE WHEN p_OrdenarPor='STOCK' AND p_Direccion='DESC' THEN p.STOCK END DESC,
         p.NOMBRE
-    LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;

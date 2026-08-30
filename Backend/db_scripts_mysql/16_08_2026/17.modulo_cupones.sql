@@ -66,10 +66,12 @@ CREATE PROCEDURE usp_cupon_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-IF p_Pagina<1 THEN SET p_Pagina=1; END IF; IF p_TamanioPagina<1 THEN SET p_TamanioPagina=10; END IF;
-    SELECT COUNT(*) FROM CUPON c INTO p_TotalRegistros
+DECLARE v_offset INT DEFAULT 0;
+    IF p_Pagina<1 THEN SET p_Pagina=1; END IF; IF p_TamanioPagina<1 THEN SET p_TamanioPagina=10; END IF;
+    SELECT COUNT(*) INTO p_TotalRegistros FROM CUPON c
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR c.IDCUPON LIKE CONCAT('%', p_Buscar, '%') OR c.CODIGO LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(c.DESCRIPCION,'') LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR c.ESTADO=p_Estado);
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT c.*, CONCAT(cu.NOMBRE, ' ', cu.APELLIDO) AS CREADOPOR_NOMBRE, CONCAT(mu.NOMBRE, ' ', mu.APELLIDO) AS MODIFICADOPOR_NOMBRE
     FROM CUPON c
     LEFT JOIN USUARIO cu ON cu.IDUSUARIO=c.CREADOPOR
@@ -86,7 +88,7 @@ IF p_Pagina<1 THEN SET p_Pagina=1; END IF; IF p_TamanioPagina<1 THEN SET p_Taman
         CASE WHEN p_OrdenarPor='ESTADO' AND p_Direccion='ASC' THEN c.ESTADO END ASC,
         CASE WHEN p_OrdenarPor='ESTADO' AND p_Direccion='DESC' THEN c.ESTADO END DESC,
         c.CODIGO
-    LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;

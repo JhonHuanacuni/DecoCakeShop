@@ -47,7 +47,8 @@ CREATE PROCEDURE usp_pago_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-IF p_Pagina < 1 THEN SET p_Pagina = 1; END IF;
+DECLARE v_offset INT DEFAULT 0;
+    IF p_Pagina < 1 THEN SET p_Pagina = 1; END IF;
     IF p_TamanioPagina < 1 THEN SET p_TamanioPagina = 10; END IF;
 
     SELECT COUNT(*) INTO p_TotalRegistros
@@ -61,6 +62,7 @@ IF p_Pagina < 1 THEN SET p_Pagina = 1; END IF;
            OR IFNULL(f.NOMBRE,'') LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Tipo IS NULL OR p_Tipo='' OR p.TIPO=p_Tipo);
 
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT p.IDPAGO, p.IDCOTIZACION, IFNULL(c.NOMBRE, q.NOMBRECLIENTE) AS CLIENTE_NOMBRE,
            p.MONTO, p.TIPO, p.IDFORMAPAGO, f.NOMBRE AS FORMAPAGO_NOMBRE,
            q.ESTADO AS COTIZACION_ESTADO, q.IDVENTA,
@@ -95,7 +97,7 @@ IF p_Pagina < 1 THEN SET p_Pagina = 1; END IF;
         CASE WHEN p_OrdenarPor='HORA' AND p_Direccion='ASC' THEN p.HORACREACION END ASC,
         CASE WHEN p_OrdenarPor='HORA' AND p_Direccion='DESC' THEN p.HORACREACION END DESC,
         p.FECHACREACION DESC, p.HORACREACION DESC, p.IDPAGO DESC
-    LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;

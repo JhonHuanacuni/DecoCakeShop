@@ -23,6 +23,7 @@ ORDER_FILE = SCRIPTS_DIR / '16_08_2026' / 'ORDEN_EJECUCION.txt'
 SKIP_ERROR_CODES = {
     1060,  # Duplicate column
     1061,  # Duplicate key name
+    1062,  # Duplicate key (reimport seed)
     1826,  # Duplicate foreign key
     3780,  # Referencing column and referenced column in a foreign key differ
 }

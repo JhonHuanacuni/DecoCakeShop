@@ -42,7 +42,8 @@ CREATE PROCEDURE usp_auditoria_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-SELECT COUNT(*) INTO p_TotalRegistros
+DECLARE v_offset INT DEFAULT 0;
+    SELECT COUNT(*) INTO p_TotalRegistros
     FROM AUDITORIA a LEFT JOIN USUARIO u ON u.IDUSUARIO=a.IDUSUARIO
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR a.TABLA LIKE CONCAT('%', p_Buscar, '%') OR a.IDREGISTRO LIKE CONCAT('%', p_Buscar, '%')
            OR CONCAT(IFNULL(u.NOMBRE,''), ' ', IFNULL(u.APELLIDO,'')) LIKE CONCAT('%', p_Buscar, '%'))
@@ -52,6 +53,7 @@ SELECT COUNT(*) INTO p_TotalRegistros
       AND (p_FechaDesde IS NULL OR p_FechaDesde='' OR a.FECHA>=p_FechaDesde)
       AND (p_FechaHasta IS NULL OR p_FechaHasta='' OR a.FECHA<=p_FechaHasta);
 
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT a.IDAUDITORIA, a.TABLA, a.IDREGISTRO, a.ACCION, a.IDUSUARIO,
            TRIM(CONCAT(IFNULL(u.NOMBRE,''), ' ', IFNULL(u.APELLIDO,''))) AS USUARIO_NOMBRE,
            a.FECHA, a.HORA, a.DATOS_ANTES, a.DATOS_DESPUES
@@ -64,7 +66,7 @@ SELECT COUNT(*) INTO p_TotalRegistros
       AND (p_FechaDesde IS NULL OR p_FechaDesde='' OR a.FECHA>=p_FechaDesde)
       AND (p_FechaHasta IS NULL OR p_FechaHasta='' OR a.FECHA<=p_FechaHasta)
     ORDER BY a.FECHA DESC, a.HORA DESC, a.IDAUDITORIA DESC
-    LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;

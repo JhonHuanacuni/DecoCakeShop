@@ -22,10 +22,12 @@ CREATE PROCEDURE usp_categoria_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-IF p_Pagina<1 THEN SET p_Pagina=1; END IF; IF p_TamanioPagina<1 THEN SET p_TamanioPagina=10; END IF;
-    SELECT COUNT(*) FROM CATEGORIA c INTO p_TotalRegistros
+DECLARE v_offset INT DEFAULT 0;
+    IF p_Pagina<1 THEN SET p_Pagina=1; END IF; IF p_TamanioPagina<1 THEN SET p_TamanioPagina=10; END IF;
+    SELECT COUNT(*) INTO p_TotalRegistros FROM CATEGORIA c
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR c.IDCATEGORIA LIKE CONCAT('%', p_Buscar, '%') OR c.NOMBRE LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR c.ESTADO=p_Estado);
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT c.*, CONCAT(cu.NOMBRE, ' ', cu.APELLIDO) AS CREADOPOR_NOMBRE, CONCAT(mu.NOMBRE, ' ', mu.APELLIDO) AS MODIFICADOPOR_NOMBRE
     FROM CATEGORIA c
     LEFT JOIN USUARIO cu ON cu.IDUSUARIO=c.CREADOPOR
@@ -38,7 +40,7 @@ IF p_Pagina<1 THEN SET p_Pagina=1; END IF; IF p_TamanioPagina<1 THEN SET p_Taman
         CASE WHEN p_OrdenarPor='NOMBRE' AND p_Direccion='ASC' THEN c.NOMBRE END ASC,
         CASE WHEN p_OrdenarPor='NOMBRE' AND p_Direccion='DESC' THEN c.NOMBRE END DESC,
         c.ORDEN, c.NOMBRE
-    LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;
@@ -145,14 +147,16 @@ CREATE PROCEDURE usp_unidad_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-SELECT COUNT(*) FROM UNIDAD INTO p_TotalRegistros
+DECLARE v_offset INT DEFAULT 0;
+    SELECT COUNT(*) INTO p_TotalRegistros FROM UNIDAD
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR IDUNIDAD LIKE CONCAT('%', p_Buscar, '%') OR NOMBRE LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR ESTADO=p_Estado);
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT * FROM UNIDAD
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR IDUNIDAD LIKE CONCAT('%', p_Buscar, '%') OR NOMBRE LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR ESTADO=p_Estado)
     ORDER BY NOMBRE
-    LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;
@@ -254,14 +258,16 @@ CREATE PROCEDURE usp_cliente_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-SELECT COUNT(*) FROM CLIENTE INTO p_TotalRegistros
+DECLARE v_offset INT DEFAULT 0;
+    SELECT COUNT(*) INTO p_TotalRegistros FROM CLIENTE
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR NOMBRE LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(DOCUMENTO,'') LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(TELEFONO,'') LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR ESTADO=p_Estado);
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT * FROM CLIENTE
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR NOMBRE LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(DOCUMENTO,'') LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(TELEFONO,'') LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR ESTADO=p_Estado)
     ORDER BY NOMBRE
-    LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;
@@ -390,11 +396,13 @@ CREATE PROCEDURE usp_formapago_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-SELECT COUNT(*) FROM FORMA_PAGO INTO p_TotalRegistros
+DECLARE v_offset INT DEFAULT 0;
+    SELECT COUNT(*) INTO p_TotalRegistros FROM FORMA_PAGO
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR NOMBRE LIKE CONCAT('%', p_Buscar, '%')) AND (p_Estado IS NULL OR p_Estado='' OR ESTADO=p_Estado);
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT * FROM FORMA_PAGO
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR NOMBRE LIKE CONCAT('%', p_Buscar, '%')) AND (p_Estado IS NULL OR p_Estado='' OR ESTADO=p_Estado)
-    ORDER BY NOMBRE LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    ORDER BY NOMBRE LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;
@@ -493,14 +501,16 @@ CREATE PROCEDURE usp_tipoentrega_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-SELECT COUNT(*) FROM TIPO_ENTREGA INTO p_TotalRegistros
+DECLARE v_offset INT DEFAULT 0;
+    SELECT COUNT(*) INTO p_TotalRegistros FROM TIPO_ENTREGA
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR NOMBRE LIKE CONCAT('%', p_Buscar, '%')) AND (p_Estado IS NULL OR p_Estado='' OR ESTADO=p_Estado);
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT IDTIPOENTREGA, NOMBRE, REQUIEREDIRECCION,
            CASE WHEN REQUIEREDIRECCION=1 THEN 'Sí' ELSE 'No' END AS REQUIEREDIRECCION_TXT,
            ESTADO, CREADOPOR, FECHACREACION, HORACREACION, MODIFICADOPOR, FECHAMODIFICACION, HORAMODIFICACION
     FROM TIPO_ENTREGA
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR NOMBRE LIKE CONCAT('%', p_Buscar, '%')) AND (p_Estado IS NULL OR p_Estado='' OR ESTADO=p_Estado)
-    ORDER BY NOMBRE LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    ORDER BY NOMBRE LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;

@@ -980,6 +980,51 @@ def convert_file_content(content: str, rel_path: str) -> str:
     return header + polish_mysql(body) + '\n'
 
 
+def fix_limit_offset_procedures(text: str) -> str:
+    """MySQL no acepta expresiones en OFFSET; hay que usar una variable INT."""
+    offset_re = re.compile(
+        r'OFFSET\s+\(\(\s*p_Pagina\s*-\s*1\s*\)\s*\*\s*p_TamanioPagina\s*\)',
+        re.I,
+    )
+
+    def repl_proc(m):
+        proc = m.group(0)
+        if not offset_re.search(proc):
+            return proc
+        if 'DECLARE v_offset INT' not in proc:
+            proc = re.sub(
+                r'(main:\s*BEGIN\s*)',
+                r'\1DECLARE v_offset INT DEFAULT 0;\n    ',
+                proc,
+                count=1,
+                flags=re.I,
+            )
+        proc = re.sub(
+            r'(SELECT\s+(?!COUNT\s*\()[\s\S]*?LIMIT\s+p_TamanioPagina\s+)'
+            r'OFFSET\s+\(\(\s*p_Pagina\s*-\s*1\s*\)\s*\*\s*p_TamanioPagina\s*\)',
+            r'SET v_offset = (p_Pagina - 1) * p_TamanioPagina;\n    \1OFFSET v_offset',
+            proc,
+            flags=re.I,
+        )
+        # Fallback: LIMIT on same line as ORDER BY
+        proc = offset_re.sub('OFFSET v_offset', proc)
+        if 'SET v_offset =' not in proc:
+            proc = re.sub(
+                r'(DECLARE v_offset INT DEFAULT 0;\s*)',
+                r'\1SET v_offset = (p_Pagina - 1) * p_TamanioPagina;\n    ',
+                proc,
+                count=1,
+            )
+        return proc
+
+    return re.sub(
+        r'CREATE PROCEDURE[\s\S]+?END\$\$',
+        repl_proc,
+        text,
+        flags=re.I,
+    )
+
+
 def polish_mysql(text: str) -> str:
     # SQL Server: COL TYPE NOT NULL FOREIGN KEY REFERENCES T(C)
     # MySQL: COL TYPE NOT NULL, FOREIGN KEY (COL) REFERENCES T(C)
@@ -992,6 +1037,7 @@ def polish_mysql(text: str) -> str:
         text,
         flags=re.I,
     )
+    text = fix_limit_offset_procedures(text)
     text = text.replace('@ObsFROM', 'v_Obs FROM')
     text = re.sub(
         r'BEGIN SET (p_Resultado=0); SET (p_Mensaje=[^;]+); LEAVE main; END',
@@ -1060,6 +1106,13 @@ def polish_mysql(text: str) -> str:
         r'SELECT (.+?) FROM (\w+) WHERE (.+?) INTO (\w+);',
         r'SELECT \1 INTO \4 FROM \2 WHERE \3;',
         text,
+    )
+    # MySQL: INTO must come before FROM (COUNT(*) FROM t INTO var)
+    text = re.sub(
+        r'SELECT\s+COUNT\s*\(\s*\*\s*\)\s+FROM\s+(\w+(?:\s+\w+)?)\s+INTO\s+(\w+)',
+        r'SELECT COUNT(*) INTO \2 FROM \1',
+        text,
+        flags=re.I,
     )
     text = re.sub(
         r"""    IF v_IDTIPOUSUARIO IS NOT NULL THEN

@@ -35,7 +35,8 @@ CREATE PROCEDURE usp_tienda_productos(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-DECLARE v_Q VARCHAR(200);
+DECLARE v_offset INT DEFAULT 0;
+    DECLARE v_Q VARCHAR(200);
     DECLARE v_Cat VARCHAR(50);
     SET v_Q = TRIM(IFNULL(p_Buscar,'')); 
     SET v_Cat = NULLIF(TRIM(IFNULL(p_IdCategoria,'')),''); 
@@ -49,6 +50,7 @@ DECLARE v_Q VARCHAR(200);
       AND (v_Cat IS NULL OR p.IDCATEGORIA = v_Cat)
       AND (v_Q = '' OR p.NOMBRE LIKE CONCAT('%', v_Q, '%') OR IFNULL(p.DESCRIPCION,'') LIKE CONCAT('%', v_Q, '%') OR c.NOMBRE LIKE CONCAT('%', v_Q, '%'));
 
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT p.IDPRODUCTO, p.NOMBRE, p.DESCRIPCION, p.PRECIO, p.STOCK, p.FOTO,
            p.IDCATEGORIA, c.NOMBRE AS CATEGORIA_NOMBRE
     FROM PRODUCTO p
@@ -57,7 +59,7 @@ DECLARE v_Q VARCHAR(200);
       AND (v_Cat IS NULL OR p.IDCATEGORIA = v_Cat)
       AND (v_Q = '' OR p.NOMBRE LIKE CONCAT('%', v_Q, '%') OR IFNULL(p.DESCRIPCION,'') LIKE CONCAT('%', v_Q, '%') OR c.NOMBRE LIKE CONCAT('%', v_Q, '%'))
     ORDER BY c.ORDEN, p.NOMBRE
-    LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;

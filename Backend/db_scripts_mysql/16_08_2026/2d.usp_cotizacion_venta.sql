@@ -19,13 +19,15 @@ CREATE PROCEDURE usp_cotizacion_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-SELECT COUNT(*) INTO p_TotalRegistros
+DECLARE v_offset INT DEFAULT 0;
+    SELECT COUNT(*) INTO p_TotalRegistros
     FROM COTIZACION q
     LEFT JOIN CLIENTE c ON c.IDCLIENTE=q.IDCLIENTE
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR q.IDCOTIZACION LIKE CONCAT('%', p_Buscar, '%')
            OR IFNULL(c.NOMBRE,q.NOMBRECLIENTE) LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR q.ESTADO=p_Estado);
 
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT q.IDCOTIZACION, q.IDCLIENTE, IFNULL(c.NOMBRE, q.NOMBRECLIENTE) AS CLIENTE_NOMBRE, q.NOMBRECLIENTE,
            q.IDTIPOENTREGA, t.NOMBRE AS TIPOENTREGA_NOMBRE,
            q.DIRECCIONENTREGA, q.COSTODELIVERY, q.SUBTOTAL, q.TOTAL, q.ESTADO, q.IDVENTA,
@@ -40,7 +42,7 @@ SELECT COUNT(*) INTO p_TotalRegistros
            OR IFNULL(c.NOMBRE,q.NOMBRECLIENTE) LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR q.ESTADO=p_Estado)
     ORDER BY q.FECHACREACION DESC, q.HORACREACION DESC, q.IDCOTIZACION DESC
-    LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;
@@ -303,11 +305,13 @@ CREATE PROCEDURE usp_venta_listar(
     OUT p_TotalRegistros INT
 )
 main: BEGIN
-SELECT COUNT(*) INTO p_TotalRegistros
+DECLARE v_offset INT DEFAULT 0;
+    SELECT COUNT(*) INTO p_TotalRegistros
     FROM VENTA v LEFT JOIN CLIENTE c ON c.IDCLIENTE=v.IDCLIENTE
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR v.IDVENTA LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(c.NOMBRE,v.NOMBRECLIENTE) LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(v.IDCOTIZACION,'') LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR v.ESTADO=p_Estado);
 
+    SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT v.IDVENTA, v.IDCOTIZACION, v.IDCLIENTE, IFNULL(c.NOMBRE, v.NOMBRECLIENTE) AS CLIENTE_NOMBRE, v.NOMBRECLIENTE, v.IDFORMAPAGO, f.NOMBRE AS FORMAPAGO_NOMBRE,
            v.IDTIPOENTREGA, t.NOMBRE AS TIPOENTREGA_NOMBRE, v.DIRECCIONENTREGA, v.COSTODELIVERY, v.SUBTOTAL, v.TOTAL, v.ESTADO,
            v.FECHACREACION AS FECHA, v.HORACREACION AS HORA,
@@ -320,7 +324,7 @@ SELECT COUNT(*) INTO p_TotalRegistros
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR v.IDVENTA LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(c.NOMBRE,v.NOMBRECLIENTE) LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(v.IDCOTIZACION,'') LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR v.ESTADO=p_Estado)
     ORDER BY v.FECHACREACION DESC, v.HORACREACION DESC
-    LIMIT p_TamanioPagina OFFSET ((p_Pagina - 1) * p_TamanioPagina);
+    LIMIT p_TamanioPagina OFFSET v_offset;
 END$$
 
 DELIMITER ;
