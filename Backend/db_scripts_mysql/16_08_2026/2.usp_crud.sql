@@ -83,8 +83,7 @@ main: BEGIN
 DECLARE v_offset INT DEFAULT 0;
     IF p_Pagina < 1 THEN SET p_Pagina = 1; END IF;
     IF p_TamanioPagina < 1 THEN SET p_TamanioPagina = 10; END IF;
-    SELECT COUNT(*) INTO p_TotalRegistros
-    FROM USUARIO u
+    SELECT COUNT(*) INTO p_TotalRegistros FROM USUARIO u
     INNER JOIN TIPOUSUARIO t ON t.IDTIPOUSUARIO = u.IDTIPOUSUARIO
     WHERE (p_Buscar IS NULL OR p_Buscar = '' OR u.IDUSUARIO LIKE CONCAT('%', p_Buscar, '%') OR u.NOMBRE LIKE CONCAT('%', p_Buscar, '%')
            OR u.APELLIDO LIKE CONCAT('%', p_Buscar, '%') OR u.DNI LIKE CONCAT('%', p_Buscar, '%') OR u.EMAIL LIKE CONCAT('%', p_Buscar, '%'))

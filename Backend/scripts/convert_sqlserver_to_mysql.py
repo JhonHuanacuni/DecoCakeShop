@@ -255,10 +255,29 @@ def convert_functions_and_calls(text: str) -> str:
 
 
 def convert_string_concat(text: str) -> str:
-    def repl_like(m):
-        return f"CONCAT('%', {m.group(1)}, '%')"
-
-    text = re.sub(r"'%'\s*\+\s*(@\w+|p_\w+|v_\w+)\s*\+\s*'%'", repl_like, text)
+    text = re.sub(
+        r"'%'\s*\+\s*(@\w+|p_\w+|v_\w+)\s*\+\s*'%'",
+        r"CONCAT('%', \1, '%')",
+        text,
+    )
+    text = re.sub(
+        r"(IFNULL\(\w+\.NOMBRE,\s*''\))\s*\+\s*' '\s*\+\s*(IFNULL\(\w+\.APELLIDO,\s*''\))",
+        r"CONCAT(\1, ' ', \2)",
+        text,
+        flags=re.I,
+    )
+    text = re.sub(
+        r"(ISNULL\(\w+\.NOMBRE,\s*''\))\s*\+\s*' '\s*\+\s*(ISNULL\(\w+\.APELLIDO,\s*''\))",
+        r"CONCAT(\1, ' ', \2)",
+        text,
+        flags=re.I,
+    )
+    text = re.sub(
+        r"(\w+\.NOMBRE)\s*\+\s*' '\s*\+\s*(\w+\.APELLIDO)",
+        r"CONCAT(\1, ' ', \2)",
+        text,
+        flags=re.I,
+    )
 
     def repl_plus(m):
         parts = [p.strip() for p in re.split(r'\s*\+\s*', m.group(0))]
@@ -267,8 +286,8 @@ def convert_string_concat(text: str) -> str:
         return 'CONCAT(' + ', '.join(parts) + ')'
 
     text = re.sub(
-        r"(?:'[^']*'|@\w+|p_\w+|v_\w+|IFNULL\([^)]+\)|\w+\.\w+)\s*"
-        r"(?:\+\s*(?:'[^']*'|@\w+|p_\w+|v_\w+|IFNULL\([^)]+\)|\w+\.\w+))+",
+        r"(?:'(?:[^']|'')*'|@\w+|p_\w+|v_\w+|\w+\.\w+)\s*"
+        r"(?:\+\s*(?:'(?:[^']|'')*'|@\w+|p_\w+|v_\w+|\w+\.\w+))+",
         repl_plus,
         text,
     )
@@ -502,6 +521,14 @@ def convert_exec_calls(text: str) -> str:
 
 def convert_if_blocks(text: str) -> str:
     text = re.sub(
+        r'IF\s+(.+?)\s+SET\s+([^;]+);\s*'
+        r'ELSE\s+IF\s+(.+?)\s+SET\s+([^;]+);\s*'
+        r'ELSE\s+RETURN\s*;',
+        r'IF \1 THEN SET \2;\n    ELSEIF \3 THEN SET \4;\n    ELSE LEAVE main;\n    END IF;',
+        text,
+        flags=re.I,
+    )
+    text = re.sub(
         r'IF\s+(.+?)\s+BEGIN\s+SET\s+([^;]+);\s+SET\s+([^;]+);\s+RETURN;\s+END',
         r'IF \1 THEN SET \2; SET \3; LEAVE main; END IF;',
         text,
@@ -513,14 +540,20 @@ def convert_if_blocks(text: str) -> str:
         text,
         flags=re.I,
     )
+    def _if_set(m):
+        cond = m.group(1)
+        if re.search(r'\bTHEN\b', cond, re.I):
+            return m.group(0)
+        return f'IF {cond} THEN SET {m.group(2)}; END IF;'
+
     text = re.sub(
-        r'IF\s+([^;\n]+?)\s+SET\s+([^;]+);',
-        r'IF \1 THEN SET \2; END IF;',
+        r'(?<!ELSE)IF\s+([^;\n]+?)\s+SET\s+([^;]+);',
+        _if_set,
         text,
         flags=re.I,
     )
     text = re.sub(
-        r'IF\s+([^;\n]+?)\s+RETURN\s*;',
+        r'(?<!ELSE)IF\s+([^;\n]+?)\s+RETURN\s*;',
         r'IF \1 THEN LEAVE main; END IF;',
         text,
         flags=re.I,
@@ -596,14 +629,31 @@ def convert_values_ctor(text: str) -> str:
     )
 
 
+def _split_top_level_commas(s: str) -> list[str]:
+    parts, buf, depth = [], [], 0
+    for ch in s:
+        if ch == '(':
+            depth += 1
+            buf.append(ch)
+        elif ch == ')':
+            depth -= 1
+            buf.append(ch)
+        elif ch == ',' and depth == 0:
+            parts.append(''.join(buf).strip())
+            buf = []
+        else:
+            buf.append(ch)
+    if buf:
+        parts.append(''.join(buf).strip())
+    return parts
+
+
 def convert_select_assign(text: str) -> str:
-    def repl_multi(m):
-        assigns = m.group(1)
-        rest = m.group(2)
-        pairs = [a.strip() for a in assigns.split(',')]
+    def repl_assign_from(m):
+        select_list, rest = m.group(1), m.group(2)
         names, exprs = [], []
-        for p in pairs:
-            am = re.match(r'(@\w+|p_\w+|v_\w+)\s*=\s*(.+)$', p)
+        for p in _split_top_level_commas(select_list):
+            am = re.match(r'((?:@|p_|v_)\w+)\s*=\s*(.+)$', p, re.I | re.S)
             if not am:
                 return m.group(0)
             names.append(am.group(1))
@@ -611,14 +661,8 @@ def convert_select_assign(text: str) -> str:
         return f"SELECT {', '.join(exprs)} INTO {', '.join(names)} {rest}"
 
     text = re.sub(
-        r'SELECT\s+((?:(?:@\w+|p_\w+|v_\w+)\s*=\s*[^,;]+)(?:\s*,\s*(?:@\w+|p_\w+|v_\w+)\s*=\s*[^,;]+)+)\s+(FROM\b[\s\S]+?;)',
-        repl_multi,
-        text,
-        flags=re.I,
-    )
-    text = re.sub(
-        r'SELECT\s+((?:p_|v_|@)\w+)\s*=\s*(.+?)\s*(?=;|\n)',
-        r'SELECT \2 INTO \1',
+        r'SELECT\s+((?:(?:@\w+|p_\w+|v_\w+)\s*=)[\s\S]+?)\s+(FROM\b[\s\S]+?;)',
+        repl_assign_from,
         text,
         flags=re.I,
     )
@@ -707,7 +751,13 @@ def hoist_declares(body: str) -> str:
     def take(m):
         raw = m.group(0).rstrip().rstrip(';').strip()
         inner = re.sub(r'(?i)^DECLARE\s+', '', raw).strip()
-        am = re.match(r'(\w+)\s+([\w\(\),\s]+?)\s*=\s*(.+)$', inner)
+        am = re.match(
+            r'(\w+)\s+'
+            r'((?:DECIMAL|VARCHAR|CHAR|INT|TINYINT|LONGTEXT|TEXT)(?:\s*\([^)]+\))?)\s*'
+            r'=\s*(.+)$',
+            inner,
+            flags=re.I | re.S,
+        )
         if am:
             name, typ, expr = am.group(1), am.group(2).strip(), am.group(3).strip()
             declares.append(f'DECLARE {name} {typ};')
@@ -1046,6 +1096,65 @@ def fix_limit_offset_procedures(text: str) -> str:
     )
 
 
+def fix_mysql_control_flow(text: str) -> str:
+    """Cierra IF/ELSE/END IF y residuos de T-SQL que MySQL rechaza."""
+
+    def repl_if_select_else(m):
+        cond = m.group(2).strip()
+        if re.search(r'\bTHEN\b', cond, re.I):
+            return m.group(0)
+        return (
+            f'{m.group(1)}IF {cond} THEN\n'
+            f'{m.group(3)}SELECT{m.group(4)}\n'
+            f'{m.group(5)}ELSE\n'
+            f'{m.group(6)}SET{m.group(7)}\n'
+            f'{m.group(1)}END IF;'
+        )
+
+    text = re.sub(
+        r'(?m)^([ \t]*)IF[ \t]+([^\n]+)\n'
+        r'([ \t]+)SELECT([^\n]*;)\n'
+        r'([ \t]*)ELSE\n'
+        r'([ \t]+)SET([^\n]*;)',
+        repl_if_select_else,
+        text,
+        flags=re.I,
+    )
+
+    text = re.sub(
+        r'\)\s*\n\s*BEGIN\s*\n'
+        r'(\s*SET p_Ok\s*=\s*0;\s*\n\s*SET p_Mensaje\s*=\s*[^;]+;)\s*\n'
+        r'\s*END\b',
+        r') THEN\n\1\n    END IF;',
+        text,
+        flags=re.I,
+    )
+
+    def close_if_then_stmt(m):
+        if_indent, next_indent = m.group(1), m.group(5)
+        if len(next_indent.replace('\t', '    ')) <= len(if_indent.replace('\t', '    ')):
+            return (
+                f'{m.group(1)}IF {m.group(2)} THEN\n'
+                f'{m.group(3)}{m.group(4)}\n'
+                f'{m.group(1)}END IF;\n'
+                f'{m.group(5)}{m.group(6)}'
+            )
+        return m.group(0)
+
+    text = re.sub(
+        r'(?m)^([ \t]*)IF ([^\n]+) THEN\n'
+        r'([ \t]+)(CALL [^;\n]+;)\n'
+        r'([ \t]*)(IF |CALL |UPDATE |SET |INSERT )',
+        close_if_then_stmt,
+        text,
+    )
+
+    text = re.sub(r'(?m)^([ \t]+)END[ \t]*$', r'\1END IF;', text)
+    text = re.sub(r'\bELSE\s+IF\b', 'ELSEIF', text, flags=re.I)
+    text = re.sub(r'\bELSEIF\s+THEN\b', 'ELSEIF', text, flags=re.I)
+    return text
+
+
 def polish_mysql(text: str) -> str:
     # SQL Server: COL TYPE NOT NULL FOREIGN KEY REFERENCES T(C)
     # MySQL: COL TYPE NOT NULL, FOREIGN KEY (COL) REFERENCES T(C)
@@ -1059,6 +1168,12 @@ def polish_mysql(text: str) -> str:
         flags=re.I,
     )
     text = fix_limit_offset_procedures(text)
+    text = re.sub(
+        r'^BEGIN\n(\s*CREATE TABLE IF NOT EXISTS[\s\S]+?;)\nEND\s*',
+        r'\1\n',
+        text,
+        flags=re.M,
+    )
     text = text.replace('@ObsFROM', 'v_Obs FROM')
     text = re.sub(
         r'BEGIN SET (p_Resultado=0); SET (p_Mensaje=[^;]+); LEAVE main; END',
@@ -1200,6 +1315,7 @@ END$$""",
         r"CONCAT(\1, RIGHT(CONCAT('000', CAST(ROW_NUMBER() OVER (ORDER BY IDDETALLE) AS CHAR)), 3))",
         text,
     )
+    text = fix_mysql_control_flow(text)
     return text
 
 
@@ -1211,6 +1327,40 @@ def iter_source_files(single: str | None = None):
         if path.name in SKIP_FILES:
             continue
         yield path
+
+
+def lint_mysql_files() -> list[str]:
+    """Avisa residuos T-SQL / IF sin THEN que MySQL va a rechazar."""
+    issues: list[str] = []
+    skip_if_prefixes = (
+        'DROP PROCEDURE IF',
+        'DROP FUNCTION IF',
+        'DROP TABLE IF',
+        'CREATE TABLE IF',
+        'CREATE PROCEDURE',
+        'ELSEIF ',
+    )
+    for path in sorted((DST_DIR / '16_08_2026').glob('*.sql')):
+        lines = path.read_text(encoding='utf-8').splitlines()
+        for i, raw in enumerate(lines, 1):
+            s = raw.strip()
+            su = s.upper()
+            if 'SET NOCOUNT' in su or 'BEGIN TRY' in su or 'BEGIN TRAN' in su:
+                issues.append(f'{path.name}:{i}: T-SQL leftover: {s[:80]}')
+            if su == 'END' and i < len(lines) and not lines[i].strip().upper().startswith('WHERE'):
+                issues.append(f'{path.name}:{i}: bare END (should be END IF)')
+            if su.startswith('ELSE IF'):
+                issues.append(f'{path.name}:{i}: ELSE IF (use ELSEIF)')
+            if re.match(r'IF\s+', s, re.I) and not any(su.startswith(p) for p in skip_if_prefixes):
+                if 'THEN' not in su and not s.endswith('(') and not s.endswith('AND'):
+                    nxt = lines[i].strip() if i < len(lines) else ''
+                    if nxt.upper().startswith(('SELECT', 'SET ', 'CALL ', 'UPDATE', 'INSERT', 'DELETE', 'LEAVE')):
+                        issues.append(f'{path.name}:{i}: IF without THEN: {s[:90]}')
+            if re.search(r'(?:p_|v_)\w+\s*=\s*\w+\s+INTO\b', s, re.I):
+                issues.append(f'{path.name}:{i}: SELECT assign leftover: {s[:90]}')
+            if '@@' in s:
+                issues.append(f'{path.name}:{i}: @@variable: {s[:80]}')
+    return issues
 
 
 def convert_all(single: str | None = None) -> int:
@@ -1245,6 +1395,13 @@ def main():
     print(f'Destino: {DST_DIR}')
     n = convert_all(args.file)
     print(f'\nOK: {n} archivo(s) convertido(s).')
+    issues = lint_mysql_files()
+    if issues:
+        print(f'\nAVISO: {len(issues)} posible(s) problema(s) restante(s):')
+        for item in issues[:40]:
+            print(f'  {item}')
+        if len(issues) > 40:
+            print(f'  ... y {len(issues) - 40} más')
     print('Siguiente: python scripts/setup_mysql_db.py')
 
 

@@ -20,8 +20,7 @@ CREATE PROCEDURE usp_cotizacion_listar(
 )
 main: BEGIN
 DECLARE v_offset INT DEFAULT 0;
-    SELECT COUNT(*) INTO p_TotalRegistros
-    FROM COTIZACION q
+    SELECT COUNT(*) INTO p_TotalRegistros FROM COTIZACION q
     LEFT JOIN CLIENTE c ON c.IDCLIENTE=q.IDCLIENTE
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR q.IDCOTIZACION LIKE CONCAT('%', p_Buscar, '%')
            OR IFNULL(c.NOMBRE,q.NOMBRECLIENTE) LIKE CONCAT('%', p_Buscar, '%'))
@@ -137,10 +136,11 @@ DECLARE v_IdCli VARCHAR(50);
     DECLARE v_Id VARCHAR(50);
     SET v_IdCli = NULLIF(TRIM(IFNULL(p_IdCliente,'')), ''); 
     SET v_Nom = NULLIF(TRIM(IFNULL(p_NombreCliente,'')), ''); 
-    IF v_IdCli IS NOT NULL AND EXISTS (SELECT 1 FROM CLIENTE WHERE IDCLIENTE=v_IdCli)
+    IF v_IdCli IS NOT NULL AND EXISTS (SELECT 1 FROM CLIENTE WHERE IDCLIENTE=v_IdCli) THEN
         SELECT IFNULL(v_Nom, NOMBRE) INTO v_Nom FROM CLIENTE WHERE IDCLIENTE=v_IdCli;
     ELSE
         SET v_IdCli = NULL;
+    END IF;
     IF v_Nom IS NULL THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el cliente.'; LEAVE main; END IF;
       CALL usp_siguiente_id('COT', 'COTIZACION', 'IDCOTIZACION', v_Id);
     INSERT INTO COTIZACION (IDCOTIZACION,IDCLIENTE,NOMBRECLIENTE,IDTIPOENTREGA,DIRECCIONENTREGA,COSTODELIVERY,SUBTOTAL,TOTAL,OBSERVACIONES,ESTADO,
@@ -180,10 +180,11 @@ DECLARE v_IdCli VARCHAR(50);
     IF EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id AND ESTADO IN ('Convertida','Anulada')) THEN SET p_Resultado=0; SET p_Mensaje='No se puede editar una cotización convertida o anulada.'; LEAVE main; END IF;
     SET v_IdCli = NULLIF(TRIM(IFNULL(p_IdCliente,'')), ''); 
     SET v_Nom = NULLIF(TRIM(IFNULL(p_NombreCliente,'')), ''); 
-    IF v_IdCli IS NOT NULL AND EXISTS (SELECT 1 FROM CLIENTE WHERE IDCLIENTE=v_IdCli)
+    IF v_IdCli IS NOT NULL AND EXISTS (SELECT 1 FROM CLIENTE WHERE IDCLIENTE=v_IdCli) THEN
         SELECT IFNULL(v_Nom, NOMBRE) INTO v_Nom FROM CLIENTE WHERE IDCLIENTE=v_IdCli;
     ELSE
         SET v_IdCli = NULL;
+    END IF;
     IF v_Nom IS NULL THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el cliente.'; LEAVE main; END IF;
     UPDATE COTIZACION SET IDCLIENTE=v_IdCli, NOMBRECLIENTE=v_Nom, IDTIPOENTREGA=p_IdTipoEntrega, DIRECCIONENTREGA=p_DireccionEntrega,
         COSTODELIVERY=IFNULL(p_CostoDelivery,0), OBSERVACIONES=p_Observaciones, ESTADO=p_Estado,
@@ -296,8 +297,7 @@ CREATE PROCEDURE usp_venta_listar(
 )
 main: BEGIN
 DECLARE v_offset INT DEFAULT 0;
-    SELECT COUNT(*) INTO p_TotalRegistros
-    FROM VENTA v LEFT JOIN CLIENTE c ON c.IDCLIENTE=v.IDCLIENTE
+    SELECT COUNT(*) INTO p_TotalRegistros FROM VENTA v LEFT JOIN CLIENTE c ON c.IDCLIENTE=v.IDCLIENTE
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR v.IDVENTA LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(c.NOMBRE,v.NOMBRECLIENTE) LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(v.IDCOTIZACION,'') LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR v.ESTADO=p_Estado);
     SET v_offset = (p_Pagina - 1) * p_TamanioPagina;

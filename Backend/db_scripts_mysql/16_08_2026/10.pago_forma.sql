@@ -21,10 +21,10 @@ CREATE PROCEDURE usp_cotizacion_pago_listar(
 main: BEGIN
 SELECT p.IDPAGO, p.IDCOTIZACION, p.MONTO, p.TIPO, p.IDFORMAPAGO, f.NOMBRE AS FORMAPAGO_NOMBRE,
            p.CREADOPOR,
-           CONCAT(IFNULL(NULLIF(TRIM(IFNULL(cu.NOMBRE,''), ' ', IFNULL(cu.APELLIDO,''))), ''), p.CREADOPOR) AS CREADOPOR_NOMBRE,
+           IFNULL(NULLIF(TRIM(CONCAT(IFNULL(cu.NOMBRE,''), ' ', IFNULL(cu.APELLIDO,''))), ''), p.CREADOPOR) AS CREADOPOR_NOMBRE,
            p.FECHACREACION, p.HORACREACION,
            p.MODIFICADOPOR,
-           CONCAT(IFNULL(NULLIF(TRIM(IFNULL(mu.NOMBRE,''), ' ', IFNULL(mu.APELLIDO,''))), ''), p.MODIFICADOPOR) AS MODIFICADOPOR_NOMBRE,
+           IFNULL(NULLIF(TRIM(CONCAT(IFNULL(mu.NOMBRE,''), ' ', IFNULL(mu.APELLIDO,''))), ''), p.MODIFICADOPOR) AS MODIFICADOPOR_NOMBRE,
            p.FECHAMODIFICACION, p.HORAMODIFICACION
     FROM COTIZACION_PAGO p
     LEFT JOIN FORMA_PAGO f ON f.IDFORMAPAGO=p.IDFORMAPAGO
@@ -105,15 +105,7 @@ DECLARE v_IdCli VARCHAR(50);
     DECLARE v_Nom VARCHAR(200);
     DECLARE v_Ok TINYINT(1);
     DECLARE v_Msg VARCHAR(200);
-    DECLARE v_TotalEst DECIMAL(12,2) = IFNULL((
-        SELECT SUM(j.CANTIDAD * j.PRECIOUNITARIO)
-        FROM JSON_TABLE(IFNULL(p_DetalleJson, '[]'), '$[*]' COLUMNS (
-            IDPRODUCTO VARCHAR(50) PATH '$.IDPRODUCTO',
-            CANTIDAD DECIMAL(12,2) PATH '$.CANTIDAD',
-            PRECIOUNITARIO DECIMAL(12,2) PATH '$.PRECIOUNITARIO'
-        )) AS j
-        WHERE j.IDPRODUCTO IS NOT NULL AND j.CANTIDAD > 0
-    ), 0) + IFNULL(p_CostoDelivery, 0);
+    DECLARE v_TotalEst DECIMAL(12,2);
     DECLARE v_Est VARCHAR(50);
     DECLARE v_Id VARCHAR(50);
     DECLARE v_RPago INT;
@@ -121,16 +113,25 @@ DECLARE v_IdCli VARCHAR(50);
     SET p_IdOut = NULL;
     SET v_IdCli = NULLIF(TRIM(IFNULL(p_IdCliente,'')), ''); 
     SET v_Nom = NULLIF(TRIM(IFNULL(p_NombreCliente,'')), ''); 
-    IF v_IdCli IS NOT NULL AND EXISTS (SELECT 1 FROM CLIENTE WHERE IDCLIENTE=v_IdCli)
+    IF v_IdCli IS NOT NULL AND EXISTS (SELECT 1 FROM CLIENTE WHERE IDCLIENTE=v_IdCli) THEN
         SELECT IFNULL(v_Nom, NOMBRE) INTO v_Nom FROM CLIENTE WHERE IDCLIENTE=v_IdCli;
     ELSE
         SET v_IdCli = NULL;
+    END IF;
     IF v_Nom IS NULL THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el cliente.'; LEAVE main; END IF;
     IF p_DetalleJson IS NULL OR CHAR_LENGTH(p_DetalleJson)<3 THEN SET p_Resultado=0; SET p_Mensaje='Agrega al menos un producto.'; LEAVE main; END IF;
       
     CALL usp_stock_check_json(p_DetalleJson, v_Ok, v_Msg);
     IF v_Ok=0 THEN SET p_Resultado=0; SET p_Mensaje=v_Msg; LEAVE main; END IF;
-     
+    SET v_TotalEst = IFNULL((
+        SELECT SUM(j.CANTIDAD * j.PRECIOUNITARIO)
+        FROM JSON_TABLE(IFNULL(p_DetalleJson, '[]'), '$[*]' COLUMNS (
+            IDPRODUCTO VARCHAR(50) PATH '$.IDPRODUCTO',
+            CANTIDAD DECIMAL(12,2) PATH '$.CANTIDAD',
+            PRECIOUNITARIO DECIMAL(12,2) PATH '$.PRECIOUNITARIO'
+        )) AS j
+        WHERE j.IDPRODUCTO IS NOT NULL AND j.CANTIDAD > 0
+    ), 0) + IFNULL(p_CostoDelivery, 0); 
     IF IFNULL(p_MontoInicial,0) < 0 THEN SET p_Resultado=0; SET p_Mensaje='El monto inicial no puede ser negativo.'; LEAVE main; END IF;
     IF IFNULL(p_MontoInicial,0) > v_TotalEst + 0.009 THEN SET p_Resultado=0; SET p_Mensaje='El monto inicial no puede ser mayor al total.'; LEAVE main; END IF;
     IF IFNULL(p_MontoInicial,0) > 0

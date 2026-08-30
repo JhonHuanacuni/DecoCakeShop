@@ -22,8 +22,7 @@ CREATE PROCEDURE usp_venta_listar(
 )
 main: BEGIN
 DECLARE v_offset INT DEFAULT 0;
-    SELECT COUNT(*) INTO p_TotalRegistros
-    FROM VENTA v LEFT JOIN CLIENTE c ON c.IDCLIENTE=v.IDCLIENTE
+    SELECT COUNT(*) INTO p_TotalRegistros FROM VENTA v LEFT JOIN CLIENTE c ON c.IDCLIENTE=v.IDCLIENTE
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR v.IDVENTA LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(c.NOMBRE,v.NOMBRECLIENTE) LIKE CONCAT('%', p_Buscar, '%') OR IFNULL(v.IDCOTIZACION,'') LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR v.ESTADO=p_Estado);
     SET v_offset = (p_Pagina - 1) * p_TamanioPagina;

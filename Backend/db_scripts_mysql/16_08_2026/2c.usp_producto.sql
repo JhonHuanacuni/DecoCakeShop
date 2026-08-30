@@ -21,8 +21,7 @@ CREATE PROCEDURE usp_producto_listar(
 )
 main: BEGIN
 DECLARE v_offset INT DEFAULT 0;
-    SELECT COUNT(*) INTO p_TotalRegistros
-    FROM PRODUCTO p
+    SELECT COUNT(*) INTO p_TotalRegistros FROM PRODUCTO p
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR p.NOMBRE LIKE CONCAT('%', p_Buscar, '%') OR p.IDPRODUCTO LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR p.ESTADO=p_Estado)
       AND (p_IdCategoria IS NULL OR p_IdCategoria='' OR p.IDCATEGORIA=p_IdCategoria);

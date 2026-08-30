@@ -51,11 +51,10 @@ SET p_Ok = 1; SET p_Mensaje = NULL;
         )) AS j
         INNER JOIN PRODUCTO p ON p.IDPRODUCTO=j.IDPRODUCTO
         WHERE j.IDPRODUCTO IS NOT NULL AND j.CANTIDAD > 0 AND p.STOCK < j.CANTIDAD
-    )
-    BEGIN
+    ) THEN
         SET p_Ok = 0;
         SET p_Mensaje = 'Stock insuficiente para uno o más productos.';
-    END
+    END IF;
 END$$
 
 DELIMITER ;
@@ -77,8 +76,7 @@ CREATE PROCEDURE usp_cotizacion_listar(
 )
 main: BEGIN
 DECLARE v_offset INT DEFAULT 0;
-    SELECT COUNT(*) INTO p_TotalRegistros
-    FROM COTIZACION q
+    SELECT COUNT(*) INTO p_TotalRegistros FROM COTIZACION q
     LEFT JOIN CLIENTE c ON c.IDCLIENTE=q.IDCLIENTE
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR q.IDCOTIZACION LIKE CONCAT('%', p_Buscar, '%')
            OR IFNULL(c.NOMBRE,q.NOMBRECLIENTE) LIKE CONCAT('%', p_Buscar, '%'))
@@ -132,10 +130,11 @@ DECLARE v_IdCli VARCHAR(50);
     DECLARE v_Id VARCHAR(50);
     SET v_IdCli = NULLIF(TRIM(IFNULL(p_IdCliente,'')), ''); 
     SET v_Nom = NULLIF(TRIM(IFNULL(p_NombreCliente,'')), ''); 
-    IF v_IdCli IS NOT NULL AND EXISTS (SELECT 1 FROM CLIENTE WHERE IDCLIENTE=v_IdCli)
+    IF v_IdCli IS NOT NULL AND EXISTS (SELECT 1 FROM CLIENTE WHERE IDCLIENTE=v_IdCli) THEN
         SELECT IFNULL(v_Nom, NOMBRE) INTO v_Nom FROM CLIENTE WHERE IDCLIENTE=v_IdCli;
     ELSE
         SET v_IdCli = NULL;
+    END IF;
     IF v_Nom IS NULL THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el cliente.'; LEAVE main; END IF;
     IF p_DetalleJson IS NULL OR CHAR_LENGTH(p_DetalleJson)<3 THEN SET p_Resultado=0; SET p_Mensaje='Agrega al menos un producto.'; LEAVE main; END IF;
       
@@ -182,13 +181,15 @@ DECLARE v_IdCli VARCHAR(50);
     IF EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id AND ESTADO IN ('Convertida','Anulada')) THEN SET p_Resultado=0; SET p_Mensaje='No se puede editar una cotización convertida o anulada.'; LEAVE main; END IF;
     SET v_IdCli = NULLIF(TRIM(IFNULL(p_IdCliente,'')), ''); 
     SET v_Nom = NULLIF(TRIM(IFNULL(p_NombreCliente,'')), ''); 
-    IF v_IdCli IS NOT NULL AND EXISTS (SELECT 1 FROM CLIENTE WHERE IDCLIENTE=v_IdCli)
+    IF v_IdCli IS NOT NULL AND EXISTS (SELECT 1 FROM CLIENTE WHERE IDCLIENTE=v_IdCli) THEN
         SELECT IFNULL(v_Nom, NOMBRE) INTO v_Nom FROM CLIENTE WHERE IDCLIENTE=v_IdCli;
     ELSE
         SET v_IdCli = NULL;
+    END IF;
     IF v_Nom IS NULL THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el cliente.'; LEAVE main; END IF;
     IF EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id AND STOCKRESERVADO=1) THEN
         CALL usp_stock_desde_detalle(p_Id, 1);
+    END IF;
     IF p_DetalleJson IS NOT NULL THEN
               
         CALL usp_stock_check_json(p_DetalleJson, v_Ok, v_Msg);
@@ -197,13 +198,14 @@ DECLARE v_IdCli VARCHAR(50);
                 CALL usp_stock_desde_detalle(p_Id, -1); END IF;
             SET p_Resultado=0; SET p_Mensaje=v_Msg; LEAVE main;
         END IF;
-    END
+    END IF;
     UPDATE COTIZACION SET IDCLIENTE=v_IdCli, NOMBRECLIENTE=v_Nom, IDTIPOENTREGA=p_IdTipoEntrega, DIRECCIONENTREGA=p_DireccionEntrega,
         COSTODELIVERY=IFNULL(p_CostoDelivery,0), OBSERVACIONES=p_Observaciones, ESTADO=p_Estado, STOCKRESERVADO=0,
         MODIFICADOPOR=fn_actor(), FECHAMODIFICACION=fn_fecha_ddmmyyyy(), HORAMODIFICACION=TIME_FORMAT(NOW(), '%H:%i:%s')
     WHERE IDCOTIZACION=p_Id;
     IF p_DetalleJson IS NOT NULL THEN
         CALL usp_cotizacion_guardar_detalle(p_Id, p_DetalleJson);
+    END IF;
     CALL usp_stock_desde_detalle(p_Id, -1);
     UPDATE COTIZACION SET STOCKRESERVADO=1 WHERE IDCOTIZACION=p_Id;
     SET p_Resultado=1; SET p_Mensaje='Cotización actualizada.';
@@ -228,6 +230,7 @@ IF NOT EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id) THEN SET p_Resu
     IF EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id AND ESTADO='Anulada') THEN SET p_Resultado=0; SET p_Mensaje='La cotización ya está anulada.'; LEAVE main; END IF;
     IF EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id AND STOCKRESERVADO=1) THEN
         CALL usp_stock_desde_detalle(p_Id, 1);
+    END IF;
     UPDATE COTIZACION SET ESTADO='Anulada', STOCKRESERVADO=0,
         MODIFICADOPOR=fn_actor(), FECHAMODIFICACION=fn_fecha_ddmmyyyy(), HORAMODIFICACION=TIME_FORMAT(NOW(), '%H:%i:%s')
     WHERE IDCOTIZACION=p_Id;
@@ -289,7 +292,7 @@ DECLARE v_Tipo VARCHAR(50);
         THEN SET p_Resultado=0; SET p_Mensaje='Stock insuficiente para uno o más productos.'; LEAVE main; END IF;
         CALL usp_stock_desde_detalle(p_Id, -1);
         UPDATE COTIZACION SET STOCKRESERVADO=1 WHERE IDCOTIZACION=p_Id;
-    END
+    END IF;
     SET v_Tipo = NULLIF(TRIM(IFNULL(p_IdTipoEntrega,'')), ''); 
     IF v_Tipo IS NULL OR NOT EXISTS (SELECT 1 FROM TIPO_ENTREGA WHERE IDTIPOENTREGA=v_Tipo AND ESTADO='Activo') THEN SET p_Resultado=0; SET p_Mensaje='Selecciona el tipo de entrega.'; LEAVE main; END IF;
     IF EXISTS (SELECT 1 FROM TIPO_ENTREGA WHERE IDTIPOENTREGA=v_Tipo AND REQUIEREDIRECCION=1)

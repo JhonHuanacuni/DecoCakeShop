@@ -42,8 +42,7 @@ DECLARE v_offset INT DEFAULT 0;
     SET v_Cat = NULLIF(TRIM(IFNULL(p_IdCategoria,'')),''); 
     IF p_Pagina IS NULL OR p_Pagina < 1 THEN SET p_Pagina = 1; END IF;
     IF p_TamanioPagina IS NULL OR p_TamanioPagina < 1 OR p_TamanioPagina > 24 THEN SET p_TamanioPagina = 12; END IF;
-    SELECT COUNT(*) INTO p_TotalRegistros
-    FROM PRODUCTO p
+    SELECT COUNT(*) INTO p_TotalRegistros FROM PRODUCTO p
     INNER JOIN CATEGORIA c ON c.IDCATEGORIA = p.IDCATEGORIA
     WHERE p.ESTADO = 'Activo'
       AND (v_Cat IS NULL OR p.IDCATEGORIA = v_Cat)
