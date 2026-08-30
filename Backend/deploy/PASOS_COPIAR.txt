@@ -68,7 +68,8 @@ nano .env
 # =============================================================================
 # 4) Instalar backend + cargar MySQL — consola SSH
 # =============================================================================
-# Requiere db_scripts_mysql/ (conversión hecha en tu PC).
+# Sube primero Backend/db_scripts_mysql/ (ya está en tu PC) junto con el resto
+# del proyecto. No importes nada en phpMyAdmin.
 
 cd ~/decocakeshop_src/Backend
 chmod +x scripts/bootstrap_server.sh
