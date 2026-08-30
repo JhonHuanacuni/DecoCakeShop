@@ -5,9 +5,9 @@ After=network.target mysql.service
 [Service]
 User=usercodex
 Group=www-data
-WorkingDirectory=/home/usercodex/decocake_src/Backend
-EnvironmentFile=/home/usercodex/decocake_src/Backend/.env
-ExecStart=/home/usercodex/decocake_src/Backend/venv/bin/gunicorn \
+WorkingDirectory=/home/usercodex/decocakeshop_src/Backend
+EnvironmentFile=/home/usercodex/decocakeshop_src/Backend/.env
+ExecStart=/home/usercodex/decocakeshop_src/Backend/venv/bin/gunicorn \
     --workers 3 \
     --bind 127.0.0.1:8004 \
     --timeout 120 \

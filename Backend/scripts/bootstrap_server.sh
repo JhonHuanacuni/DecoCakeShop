@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bootstrap DecoCake en Linode. Uso:
-#   cd ~/decocake_src/Backend
+#   cd ~/decocakeshop_src/Backend
 #   chmod +x scripts/bootstrap_server.sh
 #   ./scripts/bootstrap_server.sh
 
@@ -43,4 +43,4 @@ echo "Estáticos Django ..."
 venv/bin/python manage.py collectstatic --noinput
 
 echo ""
-echo "OK. Siguiente: sudo systemctl restart gunicorn-decocake"
+echo "OK. Siguiente: sudo systemctl restart gunicorn-decocakeshop"
