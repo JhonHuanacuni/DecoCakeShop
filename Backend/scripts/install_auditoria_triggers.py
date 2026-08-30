@@ -17,6 +17,7 @@ AUDITORIA_TARGETS: list[tuple[str, str]] = [
     ('COTIZACION_PAGO', 'IDPAGO'),
     ('VENTA', 'IDVENTA'),
     ('CUPON', 'IDCUPON'),
+    ('PROMOCION', 'IDPROMOCION'),
 ]
 
 
@@ -38,12 +39,15 @@ def install_auditoria_triggers(cursor) -> None:
             continue
 
         cursor.execute(
-            'SELECT COLUMN_NAME FROM information_schema.COLUMNS '
+            'SELECT COLUMN_NAME, DATA_TYPE FROM information_schema.COLUMNS '
             'WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %s '
             'ORDER BY ORDINAL_POSITION',
             [tabla],
         )
-        columns = [row[0] for row in cursor.fetchall()]
+        columns = [
+            row[0] for row in cursor.fetchall()
+            if str(row[1] or '').lower() not in ('longtext', 'blob', 'mediumblob', 'longblob', 'mediumtext')
+        ]
         json_new = _json_object_pairs('NEW', columns)
         json_old = _json_object_pairs('OLD', columns)
 

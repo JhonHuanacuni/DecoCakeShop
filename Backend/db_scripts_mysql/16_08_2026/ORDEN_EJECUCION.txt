@@ -20,3 +20,4 @@
 18.productos_tienda.sql
 19.tienda_pedido.sql
 20.tienda_catalogo_paginado.sql
+21.modulo_promociones.sql

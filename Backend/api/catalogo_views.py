@@ -10,6 +10,7 @@ from .catalogo_crud_service import (
     insertar_forma_pago, actualizar_forma_pago,
     insertar_tipo_entrega, actualizar_tipo_entrega,
     insertar_cupon, actualizar_cupon,
+    listar_promociones, insertar_promocion, actualizar_promocion,
     buscar_clientes,
 )
 
@@ -20,6 +21,7 @@ INSERTAR = {
     'formapago': insertar_forma_pago,
     'tipoentrega': insertar_tipo_entrega,
     'cupon': insertar_cupon,
+    'promocion': insertar_promocion,
 }
 ACTUALIZAR = {
     'categoria': actualizar_categoria,
@@ -28,6 +30,7 @@ ACTUALIZAR = {
     'formapago': actualizar_forma_pago,
     'tipoentrega': actualizar_tipo_entrega,
     'cupon': actualizar_cupon,
+    'promocion': actualizar_promocion,
 }
 ORDEN_DEFAULT = {
     'categoria': 'ORDEN',
@@ -36,6 +39,7 @@ ORDEN_DEFAULT = {
     'formapago': 'NOMBRE',
     'tipoentrega': 'NOMBRE',
     'cupon': 'CODIGO',
+    'promocion': 'ORDEN',
 }
 
 
@@ -45,7 +49,8 @@ def _floats(row, campos=('VALOR', 'MINIMO')):
     for campo in campos:
         if row.get(campo) is not None:
             row[campo] = float(row[campo])
-    row['VIGENCIA'] = 'Limitado' if row.get('USOSMAX') else 'Permanente'
+    if 'USOSMAX' in row:
+        row['VIGENCIA'] = 'Limitado' if row.get('USOSMAX') else 'Permanente'
     return row
 
 
@@ -61,17 +66,30 @@ def catalogo_mantenedor(entidad, not_found='Registro no encontrado'):
     def _view(request, id_val=None):
         if request.method == 'GET' and not id_val:
             try:
-                data, total = listar_catalogo(
-                    entidad,
-                    request.GET.get('buscar') or None,
-                    request.GET.get('estado') or None,
-                    request.GET.get('ordenarPor', ORDEN_DEFAULT[entidad]),
-                    request.GET.get('direccion', 'ASC'),
-                    int(request.GET.get('pagina', 1)),
-                    int(request.GET.get('tamanio', 10)),
-                )
+                if entidad == 'promocion':
+                    data, total = listar_promociones(
+                        request.GET.get('buscar') or None,
+                        request.GET.get('estado') or None,
+                        request.GET.get('tipo') or None,
+                        request.GET.get('ordenarPor', ORDEN_DEFAULT[entidad]),
+                        request.GET.get('direccion', 'ASC'),
+                        int(request.GET.get('pagina', 1)),
+                        int(request.GET.get('tamanio', 10)),
+                    )
+                else:
+                    data, total = listar_catalogo(
+                        entidad,
+                        request.GET.get('buscar') or None,
+                        request.GET.get('estado') or None,
+                        request.GET.get('ordenarPor', ORDEN_DEFAULT[entidad]),
+                        request.GET.get('direccion', 'ASC'),
+                        int(request.GET.get('pagina', 1)),
+                        int(request.GET.get('tamanio', 10)),
+                    )
                 if entidad == 'cupon':
                     data = [_floats(row) for row in data]
+                if entidad == 'promocion':
+                    data = [_floats(row, ('PRECIO',)) for row in data]
                 return JsonResponse({
                     'data': data, 'total': total,
                     'pagina': int(request.GET.get('pagina', 1)),
@@ -87,6 +105,8 @@ def catalogo_mantenedor(entidad, not_found='Registro no encontrado'):
                     return JsonResponse({'error': not_found}, status=404)
                 if entidad == 'cupon':
                     row = _floats(row)
+                if entidad == 'promocion':
+                    row = _floats(row, ('PRECIO',))
                 return JsonResponse({'data': row})
             except Exception as exc:
                 return JsonResponse({'error': str(exc)}, status=500)
@@ -139,3 +159,4 @@ clientes_mantenedor = catalogo_mantenedor('cliente', 'Cliente no encontrado')
 formas_pago_mantenedor = catalogo_mantenedor('formapago', 'Forma de pago no encontrada')
 tipos_entrega_mantenedor = catalogo_mantenedor('tipoentrega', 'Tipo de entrega no encontrado')
 cupones_mantenedor = catalogo_mantenedor('cupon', 'Cupón no encontrado')
+promociones_mantenedor = catalogo_mantenedor('promocion', 'Promoción no encontrada')

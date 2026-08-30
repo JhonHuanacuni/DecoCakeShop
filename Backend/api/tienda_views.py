@@ -200,6 +200,29 @@ def tienda_checkout(request):
         return JsonResponse({'error': str(exc)}, status=500)
 
 
+def _promo_publica(row):
+    if row.get('PRECIO') is not None:
+        row['PRECIO'] = float(row['PRECIO'])
+    foto = row.get('IMAGEN')
+    if isinstance(foto, (bytes, bytearray, memoryview)):
+        row['IMAGEN'] = bytes(foto).decode('utf-8', errors='ignore')
+    return row
+
+
+@csrf_exempt
+def tienda_promociones(request):
+    if request.method != 'GET':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    try:
+        with connection.cursor() as cursor:
+            rows = [_promo_publica(r) for r in sp.call_proc_rows(cursor, 'usp_promocion_publicas')]
+        slides = [r for r in rows if r.get('TIPO') == 'slider']
+        cards = [r for r in rows if r.get('TIPO') == 'card']
+        return JsonResponse({'slides': slides, 'cards': cards})
+    except Exception as exc:
+        return JsonResponse({'error': str(exc)}, status=500)
+
+
 def _texto(val, max_len):
     return str(val or '').strip()[:max_len]
 

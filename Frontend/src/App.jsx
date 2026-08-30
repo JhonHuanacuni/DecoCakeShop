@@ -11,7 +11,7 @@ import DashboardPage from "./modules/dashboard/DashboardPage";
 import AuditoriaPage from "./modules/auditoria/AuditoriaPage";
 import PagoPage from "./modules/pago/PagoPage";
 import {
-  CategoriaPage, UnidadPage, ClientePage, FormaPagoPage, TipoEntregaPage, CuponPage,
+  CategoriaPage, UnidadPage, ClientePage, FormaPagoPage, TipoEntregaPage, CuponPage, CarruselPage, PromocionPage,
 } from "./modules/catalogos/CatalogoPages";
 import "./App.css";
 
@@ -40,6 +40,9 @@ const pageContent = {
   "mantenedores-unidades": { title: "Unidades", description: "Unidades de medida.", component: UnidadPage },
   "mantenedores-formas-pago": { title: "Formas de pago", description: "Medios de pago.", component: FormaPagoPage },
   "mantenedores-tipos-entrega": { title: "Tipos de entrega", description: "Recojo y delivery.", component: TipoEntregaPage },
+  "catalogo-tienda": { title: "Catálogo", description: "Carrusel y promociones de la tienda." },
+  "catalogo-carrusel": { title: "Carrusel", description: "Imágenes del banner de inicio.", component: CarruselPage },
+  "catalogo-promociones": { title: "Promociones", description: "Textos e imágenes de promociones.", component: PromocionPage },
 };
 
 function App() {

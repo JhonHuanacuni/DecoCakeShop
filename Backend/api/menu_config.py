@@ -28,6 +28,7 @@ MODULO_PAGE_MAP = {
     'MOD008': 'admin-modulos',
     'MOD009': 'pagos',
     'MOD010': 'cupones',
+    'MOD011': 'catalogo-tienda',
 }
 
 SUBMODULO_PAGE_MAP = {
@@ -36,6 +37,8 @@ SUBMODULO_PAGE_MAP = {
     'SUB003': 'mantenedores-unidades',
     'SUB004': 'mantenedores-formas-pago',
     'SUB005': 'mantenedores-tipos-entrega',
+    'SUB006': 'catalogo-carrusel',
+    'SUB007': 'catalogo-promociones',
 }
 
 ROLE_TO_TIPOUSUARIO = {

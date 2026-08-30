@@ -46,26 +46,30 @@ option {
 
 .app-shell {
   display: flex;
-  min-height: 100vh;
+  height: 100vh;
+  max-height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
   width: 220px;
   min-width: 220px;
+  flex: 0 0 220px;
   background: var(--sidebar-bg);
   color: #fff;
   display: flex;
   flex-direction: column;
-  transition: width 0.25s ease;
-  position: sticky;
-  top: 0;
-  height: 100vh;
-  overflow: hidden;
+  transition: width 0.25s ease, flex-basis 0.25s ease;
+  position: relative;
+  height: 100%;
+  overflow: visible;
+  z-index: 20;
 }
 
 .sidebar-collapsed {
   width: 60px;
   min-width: 60px;
+  flex-basis: 60px;
 }
 
 .sidebar-collapsed .sidebar-label,
@@ -152,10 +156,12 @@ option {
 
 .sidebar-nav {
   flex: 1;
+  min-height: 0;
   padding: 8px 6px 10px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  overflow-x: hidden;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -282,11 +288,9 @@ option {
 .sidebar-section-body {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  /* margin-top: 10px; */
-  border-radius: 22px;
-  /* background: rgba(255, 255, 255, 0.18); */
+  gap: 4px;
+  padding: 4px 4px 6px 10px;
+  border-radius: 0;
   transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease, margin 0.3s ease;
   overflow: hidden;
 }
@@ -309,28 +313,37 @@ option {
 .sidebar-sublink {
   width: 100%;
   border: none;
-  background: #ffffff;
-  color: var(--primary);
-  padding: 8px 12px;
-  border-radius: 10px;
+  background: transparent;
+  color: rgba(242, 243, 248, 0.92);
+  padding: 8px 10px;
+  border-radius: 8px;
   text-align: left;
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 0.8rem;
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 12px 24px rgba(33, 15, 96, 0.06);
+  transition: background 0.2s ease, transform 0.2s ease;
+  box-shadow: none;
+  min-width: 0;
+}
+
+.sidebar-sublink-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sidebar-sublink:hover {
-  background: #f7f8ff;
+  background: rgba(46, 196, 212, 0.18);
   transform: translateX(1px);
+  color: #fff;
 }
 
 .sidebar-sublink.active {
-  background: #fde8f2;
-  color: var(--primary);
+  background: rgba(225, 20, 122, 0.42);
+  color: #fff;
 }
 
 .sidebar-sublink.collapsed {
@@ -346,14 +359,16 @@ option {
   position: fixed;
   z-index: 1000;
   min-width: 220px;
-  background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.15);
+  max-width: 280px;
+  background: #111;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
   padding: 8px;
 }
 
 .sidebar-popover .sidebar-sublink {
-  color: #222;
+  color: rgba(242, 243, 248, 0.92);
 }
 
 .sidebar-popover-inner {
@@ -482,9 +497,10 @@ option {
   flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 0;
   min-width: 0;
-  overflow-x: hidden;
+  height: 100%;
+  overflow: hidden;
   background: #fff6f9;
 }
 
@@ -547,8 +563,9 @@ option {
   padding: 16px;
   flex: 1;
   min-width: 0;
+  min-height: 0;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow: auto;
 }
 
 .page-header h1 {
@@ -688,7 +705,17 @@ option {
   font-size: 0.85rem;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 899px) {
+  body {
+    overflow: auto;
+  }
+
+  .app-shell {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
   .sidebar {
     position: fixed;
     height: 100vh;
@@ -697,6 +724,17 @@ option {
     transform: translateX(-100%);
     transition: transform 0.25s ease;
     z-index: 15;
+    overflow: hidden;
+  }
+
+  .main-content {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+  }
+
+  .content {
+    overflow: visible;
   }
 
   .sidebar-mobile-open {

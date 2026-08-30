@@ -325,7 +325,7 @@
   position: relative;
   width: 100%;
   margin-bottom: 2rem;
-  background: #3a1a22;
+  background: linear-gradient(180deg, #2a1018 0%, #1a0a10 100%);
 }
 .shop-slider-viewport {
   overflow: hidden;
@@ -340,15 +340,13 @@
   margin: 0;
   height: min(68vh, 540px);
   overflow: hidden;
-  background: #3a1a22;
+  background: #1a0a10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .shop-slider-blur {
-  position: absolute;
-  inset: -30px;
-  background-size: cover;
-  background-position: center;
-  filter: blur(32px) saturate(1.2) brightness(0.82);
-  transform: scale(1.15);
+  display: none;
 }
 .shop-slider-slide img {
   position: relative;

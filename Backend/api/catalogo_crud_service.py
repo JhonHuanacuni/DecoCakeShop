@@ -1,5 +1,5 @@
 from django.db import connection
-from .crud_exec import listar_std, escribir
+from .crud_exec import listar_std, listar_paginado, escribir
 from . import sp_runner as sp
 
 
@@ -183,6 +183,53 @@ def actualizar_cupon(id_val, payload, actor=None):
 
 def eliminar_catalogo(entidad, id_val, actor=None):
     return escribir(_std(entidad)['eliminar'], '@Id=%s', [id_val], actor)
+
+
+def _promocion_params(payload, tipo_fijo=None):
+    tipo = (tipo_fijo or payload.get('TIPO') or 'slider').strip().lower()
+    if tipo not in ('slider', 'card'):
+        tipo = 'slider'
+    return [
+        tipo,
+        (payload.get('TITULO') or '').strip(),
+        payload.get('SUBTITULO'),
+        payload.get('DESCRIPCION'),
+        _num(payload.get('PRECIO'), None),
+        payload.get('PRECIOTEXTO'),
+        payload.get('ENLACE'),
+        payload.get('ESTILO'),
+        payload.get('IMAGEN') or payload.get('FOTO'),
+        int(payload.get('ORDEN') or 0),
+        payload.get('ESTADO', 'Activo'),
+    ]
+
+
+def listar_promociones(buscar=None, estado=None, tipo=None, ordenar_por='ORDEN', direccion='ASC', pagina=1, tamanio=10):
+    return listar_paginado(
+        'usp_promocion_listar',
+        '@Buscar=%s, @Estado=%s, @Tipo=%s, @OrdenarPor=%s, @Direccion=%s, @Pagina=%s, @TamanioPagina=%s',
+        [buscar or None, estado or None, tipo or None, ordenar_por, direccion, pagina, tamanio],
+    )
+
+
+def insertar_promocion(payload, actor=None):
+    return escribir(
+        'usp_promocion_insertar',
+        '@Tipo=%s, @Titulo=%s, @Subtitulo=%s, @Descripcion=%s, @Precio=%s, @PrecioTexto=%s, '
+        '@Enlace=%s, @Estilo=%s, @Imagen=%s, @Orden=%s, @Estado=%s',
+        _promocion_params(payload),
+        actor, payload,
+    )
+
+
+def actualizar_promocion(id_val, payload, actor=None):
+    return escribir(
+        'usp_promocion_actualizar',
+        '@Id=%s, @Tipo=%s, @Titulo=%s, @Subtitulo=%s, @Descripcion=%s, @Precio=%s, @PrecioTexto=%s, '
+        '@Enlace=%s, @Estilo=%s, @Imagen=%s, @Orden=%s, @Estado=%s',
+        [id_val, *_promocion_params(payload)],
+        actor, payload,
+    )
 
 
 def buscar_clientes(buscar):

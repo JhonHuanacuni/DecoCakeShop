@@ -5,6 +5,9 @@ import { dbToView } from "../../utils/fecha";
 function renderCell(col, row, index = 0, offset = 0, pk = "") {
   if (col.tipo === "numero") return offset + index + 1;
   const value = row[col.campo];
+  if (col.tipo === "imagen") {
+    return value ? <img src={value} alt="" className="table-thumb" /> : "—";
+  }
   if (value == null || value === "") return "—";
   if (col.tipo === "estado") {
     const conDeuda = pk === "IDVENTA" && Number(row.SALDO) > 0.009 && !["Anulado", "Anulada"].includes(row.ESTADO);

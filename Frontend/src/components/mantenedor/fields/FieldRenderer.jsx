@@ -13,7 +13,7 @@ async function leerImagen(file, onChange) {
   catch { onChange(""); }
 }
 
-function FotoDropzone({ value, disabled, onChange }) {
+function FotoDropzone({ value, disabled, onChange, titulo = "Imagen" }) {
   const inputRef = useRef(null);
   const [arrastrando, setArrastrando] = useState(false);
 
@@ -21,7 +21,7 @@ function FotoDropzone({ value, disabled, onChange }) {
 
   return (
     <div className="foto-drop">
-      <div className="foto-drop-title">Imagen del producto</div>
+      <div className="foto-drop-title">{titulo}</div>
       <button
         type="button"
         className={`foto-drop-zone${arrastrando ? " is-drag" : ""}${disabled ? " is-disabled" : ""}${value ? " has-foto" : ""}`}
@@ -70,7 +70,7 @@ export default function FieldRenderer({ campo, value, error, disabled, catalogo 
     const phSel = phSeleccione(campo.etiqueta);
     const phTxt = phIngrese(campo.etiqueta);
     if (campo.control === "foto") {
-      return <FotoDropzone value={value} disabled={disabled} onChange={onChange} />;
+      return <FotoDropzone value={value} disabled={disabled} onChange={onChange} titulo={campo.etiqueta} />;
     }
     if (campo.control === "select" && campo.catalogo) {
       return (

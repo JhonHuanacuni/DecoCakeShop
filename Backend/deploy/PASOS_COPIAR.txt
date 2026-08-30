@@ -125,3 +125,15 @@ sudo apache2ctl configtest && sudo systemctl reload apache2
 # =============================================================================
 sudo journalctl -u gunicorn-decocakeshop -n 80 --no-pager
 sudo tail -n 50 /var/log/apache2/decocakeshop_error.log
+
+# =============================================================================
+# 9) Catálogo / promociones (después de git pull)
+# =============================================================================
+
+cd ~/decocakeshop_src/Backend
+source .venv/bin/activate
+python scripts/setup_mysql_db.py --file 16_08_2026/21.modulo_promociones.sql
+sudo systemctl restart gunicorn-decocakeshop
+
+# En el PC: npm run build  y sube Frontend/dist a ~/decocakeshop_front
+

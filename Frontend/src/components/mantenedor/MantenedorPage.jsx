@@ -15,6 +15,7 @@ export default function MantenedorPage({ config, catalogos = {}, ordenInicial, e
     entidad: cfg.entidad,
     pk: cfg.pk,
     ordenInicial: ordenInicial || { campo: cfg.pk, direccion: "ASC" },
+    filtrosIniciales: cfg.filtrosIniciales || {},
   });
   const [modalAbierto, setModalAbierto] = useState(false);
   const [modo, setModo] = useState("crear");
@@ -36,10 +37,11 @@ export default function MantenedorPage({ config, catalogos = {}, ordenInicial, e
     catch (err) { setToast({ mensaje: err.message, tipo: "error" }); }
   };
   const abrirEliminar = (row) => {
-    setConfirm({ id: row[cfg.pk], mensaje: `¿Eliminar «${row.NOMBRE || row[cfg.pk]}»?` });
+    setConfirm({ id: row[cfg.pk], mensaje: `¿Eliminar «${row.NOMBRE || row.TITULO || row[cfg.pk]}»?` });
   };
   const handleGuardar = async (payload) => {
-    const mensaje = modo === "crear" ? await crud.insertar(payload) : await crud.actualizar(crud.registro[cfg.pk], payload);
+    const body = { ...payload, ...(cfg.valoresFijos || {}) };
+    const mensaje = modo === "crear" ? await crud.insertar(body) : await crud.actualizar(crud.registro[cfg.pk], body);
     setToast({ mensaje, tipo: "success" });
     await crud.listar();
   };

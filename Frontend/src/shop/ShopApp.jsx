@@ -17,6 +17,29 @@ const SLIDES = [
   { src: slideColorantes, alt: "Colorantes y cortadores" },
 ];
 
+const PROMOS = [
+  {
+    src: "/shop-products/05-bols-de-acero-x7und.png",
+    kicker: "Combo del mes",
+    titulo: "Set de bowls metálicos",
+    texto: "7 piezas anidables, de 18 a 30 cm, para batir y guardar con orden.",
+    precio: 58,
+    precioTexto: "",
+    enlace: "CAT004",
+    estilo: "rosa",
+  },
+  {
+    src: "/shop-products/12-kekera-rectangular-x5-und.jpeg",
+    kicker: "Hornea más",
+    titulo: "Kekeras y moldes",
+    texto: "Sets listos para tortas, kekes y celebraciones de todo tamaño.",
+    precio: 14,
+    precioTexto: "Desde",
+    enlace: "CAT003",
+    estilo: "teal",
+  },
+];
+
 const WHATSAPP = "51940247576";
 const SOCIAL = {
   instagram: "https://www.instagram.com/decocake.shop",
@@ -59,6 +82,8 @@ export default function ShopApp() {
   const lastScroll = useRef(0);
   const headerLock = useRef(false);
   const [slide, setSlide] = useState(0);
+  const [slides, setSlides] = useState(SLIDES);
+  const [promos, setPromos] = useState(PROMOS);
   const [cuponCodigo, setCuponCodigo] = useState("");
   const [cupon, setCupon] = useState(null);
   const [cuponError, setCuponError] = useState("");
@@ -128,9 +153,38 @@ export default function ShopApp() {
 
   useEffect(() => {
     if (seccion !== "inicio") return undefined;
-    const timer = setInterval(() => setSlide((n) => (n + 1) % SLIDES.length), 5500);
+    if (!slides.length) return undefined;
+    const timer = setInterval(() => setSlide((n) => (n + 1) % slides.length), 5500);
     return () => clearInterval(timer);
-  }, [seccion]);
+  }, [seccion, slides.length]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/tienda/promociones/");
+        const data = await res.json();
+        if (!res.ok) return;
+        if (data.slides?.length) {
+          setSlides(data.slides.map((s) => ({
+            src: s.IMAGEN, alt: s.TITULO || "Promoción",
+          })));
+          setSlide(0);
+        }
+        if (data.cards?.length) {
+          setPromos(data.cards.map((c) => ({
+            src: c.IMAGEN,
+            kicker: c.SUBTITULO || "",
+            titulo: c.TITULO,
+            texto: c.DESCRIPCION || "",
+            precio: c.PRECIO,
+            precioTexto: c.PRECIOTEXTO || "",
+            enlace: c.ENLACE || "",
+            estilo: c.ESTILO || "rosa",
+          })));
+        }
+      } catch { /* usa el contenido por defecto */ }
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -427,45 +481,47 @@ export default function ShopApp() {
             <section className="shop-slider" aria-label="Promociones">
               <div className="shop-slider-viewport">
                 <div className="shop-slider-track" style={{ transform: `translateX(-${slide * 100}%)` }}>
-                  {SLIDES.map((item) => (
-                    <figure key={item.alt} className="shop-slider-slide">
-                      <div className="shop-slider-blur" style={{ backgroundImage: `url(${item.src})` }} aria-hidden="true" />
+                  {slides.map((item, i) => (
+                    <figure key={`${item.alt}-${i}`} className="shop-slider-slide">
                       <img src={item.src} alt={item.alt} />
                     </figure>
                   ))}
                 </div>
               </div>
-              <button type="button" className="shop-slider-arrow prev" aria-label="Anterior" onClick={() => setSlide((n) => (n - 1 + SLIDES.length) % SLIDES.length)}>‹</button>
-              <button type="button" className="shop-slider-arrow next" aria-label="Siguiente" onClick={() => setSlide((n) => (n + 1) % SLIDES.length)}>›</button>
-              <div className="shop-slider-dots">
-                {SLIDES.map((item, i) => (
-                  <button key={item.alt} type="button" className={slide === i ? "on" : ""} aria-label={`Ir a imagen ${i + 1}`} onClick={() => setSlide(i)} />
-                ))}
-              </div>
+              {slides.length > 1 && (
+                <>
+                  <button type="button" className="shop-slider-arrow prev" aria-label="Anterior" onClick={() => setSlide((n) => (n - 1 + slides.length) % slides.length)}>‹</button>
+                  <button type="button" className="shop-slider-arrow next" aria-label="Siguiente" onClick={() => setSlide((n) => (n + 1) % slides.length)}>›</button>
+                  <div className="shop-slider-dots">
+                    {slides.map((item, i) => (
+                      <button key={`${item.alt}-dot-${i}`} type="button" className={slide === i ? "on" : ""} aria-label={`Ir a imagen ${i + 1}`} onClick={() => setSlide(i)} />
+                    ))}
+                  </div>
+                </>
+              )}
             </section>
 
             <section className="shop-promos">
               <p className="shop-kicker">Temporada dulce</p>
               <h2>Promociones</h2>
               <div className="shop-promo-grid">
-                <article className="shop-promo-card" onClick={() => ir("productos", "CAT004")}>
-                  <img src="/shop-products/05-bols-de-acero-x7und.png" alt="Bowls de acero" />
-                  <div className="shop-promo-copy">
-                    <span>Combo del mes</span>
-                    <h3>Set de bowls metálicos</h3>
-                    <p>7 piezas anidables, de 18 a 30 cm, para batir y guardar con orden.</p>
-                    <strong>{money(58)}</strong>
-                  </div>
-                </article>
-                <article className="shop-promo-card shop-promo-card--teal" onClick={() => ir("productos", "CAT003")}>
-                  <img src="/shop-products/12-kekera-rectangular-x5-und.jpeg" alt="Kekeras" />
-                  <div className="shop-promo-copy">
-                    <span>Hornea más</span>
-                    <h3>Kekeras y moldes</h3>
-                    <p>Sets listos para tortas, kekes y celebraciones de todo tamaño.</p>
-                    <strong>Desde {money(14)}</strong>
-                  </div>
-                </article>
+                {promos.map((promo) => (
+                  <article
+                    key={promo.titulo}
+                    className={`shop-promo-card${promo.estilo === "teal" ? " shop-promo-card--teal" : ""}`}
+                    onClick={() => ir("productos", promo.enlace || "")}
+                  >
+                    <img src={promo.src} alt={promo.titulo} />
+                    <div className="shop-promo-copy">
+                      {promo.kicker ? <span>{promo.kicker}</span> : null}
+                      <h3>{promo.titulo}</h3>
+                      {promo.texto ? <p>{promo.texto}</p> : null}
+                      {promo.precio != null && promo.precio !== "" ? (
+                        <strong>{promo.precioTexto ? `${promo.precioTexto} ` : ""}{money(promo.precio)}</strong>
+                      ) : promo.precioTexto ? <strong>{promo.precioTexto}</strong> : null}
+                    </div>
+                  </article>
+                ))}
               </div>
             </section>
 

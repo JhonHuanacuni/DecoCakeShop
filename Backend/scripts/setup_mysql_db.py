@@ -161,7 +161,7 @@ def run_file(cursor, path: Path, rel: str | None = None):
         install_auditoria_triggers(cursor)
         return
 
-    if rel and rel.endswith('17.modulo_cupones.sql'):
+    if rel and rel.endswith(('17.modulo_cupones.sql', '21.modulo_promociones.sql')):
         sql = path.read_text(encoding='utf-8')
         for n, stmt in enumerate(split_sql(sql), start=1):
             s = _strip_leading_comments(stmt.strip())
@@ -228,6 +228,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--skip-import', action='store_true', help='Solo verificar conexión')
     parser.add_argument('--force', action='store_true', help='Importar aunque ya existan tablas')
+    parser.add_argument('--file', help='Ejecutar un solo script, ej. 16_08_2026/21.modulo_promociones.sql')
     args = parser.parse_args()
 
     load_dotenv(BASE_DIR / '.env')
@@ -268,6 +269,17 @@ def main():
                 else:
                     print(f'AVISO: {db_name} sin tablas; ejecuta sin --skip-import.', file=sys.stderr)
                     sys.exit(1)
+                return
+
+            if args.file:
+                rel = args.file.replace('\\', '/').lstrip('/')
+                path = SCRIPTS_DIR / rel.replace('/', os.sep)
+                if not path.exists():
+                    print(f'FALTA: {path}', file=sys.stderr)
+                    sys.exit(1)
+                print(f'>>> {rel}')
+                run_file(cur, path, rel)
+                print(f'OK: aplicado {rel}')
                 return
 
             if _db_ready(cur, db_name) and not args.force:

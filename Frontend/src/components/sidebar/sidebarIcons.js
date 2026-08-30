@@ -2,12 +2,14 @@ import {
   faGauge, faUsers, faBox, faFileInvoice, faCashRegister,
   faTags, faCog, faClipboardList, faLayerGroup, faIdCard,
   faMoneyBill, faTruck, faCircle, faReceipt, faTicket,
+  faStore, faImages, faBullhorn,
 } from "@fortawesome/free-solid-svg-icons";
 
 const ICON_MAP = {
   faGauge, faUsers, faBox, faFileInvoice, faCashRegister,
   faTags, faCog, faClipboardList, faLayerGroup, faIdCard,
   faMoneyBill, faTruck, faCircle, faReceipt, faTicket,
+  faStore, faImages, faBullhorn,
 };
 
 export function resolveSidebarIcon(iconName) {

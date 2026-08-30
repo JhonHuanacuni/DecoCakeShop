@@ -125,3 +125,45 @@ export const productoConfig = {
   ]}],
 };
 productoConfig.campos = productoConfig.secciones.flatMap((s) => s.campos);
+
+function _promoConfig(tipo, titulo) {
+  const esCard = tipo === "card";
+  return {
+    modulo: "Catálogo",
+    titulo,
+    entidad: "promociones",
+    pk: "IDPROMOCION",
+    valoresFijos: { TIPO: tipo },
+    filtrosIniciales: { tipo },
+    columnas: [
+      { campo: "IMAGEN", etiqueta: "Imagen", tipo: "imagen", ordenable: false },
+      { campo: "TITULO", etiqueta: "Título", ordenable: true },
+      ...(esCard ? [
+        { campo: "SUBTITULO", etiqueta: "Etiqueta", ordenable: false },
+        { campo: "PRECIO", etiqueta: "Precio", tipo: "decimal", ordenable: false },
+      ] : []),
+      { campo: "ORDEN", etiqueta: "Orden", ordenable: true },
+      { campo: "ESTADO", etiqueta: "Estado", tipo: "estado", ordenable: true },
+    ],
+    secciones: [{ titulo: esCard ? "Datos de la promoción" : "Imagen del carrusel", campos: [
+      { campo: "TITULO", etiqueta: esCard ? "Título" : "Título / texto alternativo", control: "text", obligatorio: true, full: true },
+      ...(esCard ? [
+        { campo: "SUBTITULO", etiqueta: "Etiqueta", control: "text", ayuda: "Ej. Combo del mes" },
+        { campo: "DESCRIPCION", etiqueta: "Descripción", control: "textarea", full: true },
+        { campo: "PRECIO", etiqueta: "Precio", control: "number", defaultValue: "0" },
+        { campo: "PRECIOTEXTO", etiqueta: "Texto junto al precio", control: "text", ayuda: "Ej. Desde. Déjalo vacío para mostrar solo S/." },
+        { campo: "ENLACE", etiqueta: "Categoría al hacer clic", control: "text", ayuda: "Id de categoría, ej. CAT003. Vacío = catálogo." },
+        { campo: "ESTILO", etiqueta: "Color", control: "select", opciones: [{ value: "rosa", label: "Rosa" }, { value: "teal", label: "Turquesa" }], defaultValue: "rosa" },
+      ] : []),
+      { campo: "ORDEN", etiqueta: "Orden", control: "number", defaultValue: "1" },
+      { campo: "ESTADO", etiqueta: "Estado", control: "select", opciones: ["Activo", "Inactivo"], defaultValue: "Activo", obligatorio: true },
+      { campo: "IMAGEN", etiqueta: "Imagen", control: "foto", full: true, obligatorio: true },
+    ]}],
+  };
+}
+
+export const carruselConfig = _promoConfig("slider", "Carrusel");
+carruselConfig.campos = carruselConfig.secciones.flatMap((s) => s.campos);
+
+export const promocionConfig = _promoConfig("card", "Promociones");
+promocionConfig.campos = promocionConfig.secciones.flatMap((s) => s.campos);
