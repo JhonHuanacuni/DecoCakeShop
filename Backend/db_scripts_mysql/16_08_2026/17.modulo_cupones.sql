@@ -206,7 +206,8 @@ CREATE PROCEDURE usp_cupon_validar(
     IN p_Subtotal DECIMAL(12,2)
 )
 main: BEGIN
-DECLARE v_Hoy DATE = CURDATE();
+DECLARE v_Hoy DATE;
+    SET v_Hoy = CURDATE(); 
     SELECT c.IDCUPON, c.CODIGO, c.DESCRIPCION, c.TIPO, c.VALOR, c.MINIMO, c.ESTADO
     FROM CUPON c
     WHERE c.CODIGO = UPPER(TRIM(IFNULL(p_Codigo,'')))

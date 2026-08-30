@@ -760,7 +760,7 @@ def hoist_declares(body: str) -> str:
         inner = re.sub(r'(?i)^DECLARE\s+', '', raw).strip()
         am = re.match(
             r'(\w+)\s+'
-            r'((?:DECIMAL|VARCHAR|CHAR|INT|TINYINT|LONGTEXT|TEXT)(?:\s*\([^)]+\))?)\s*'
+            r'((?:DECIMAL|VARCHAR|CHAR|INT|TINYINT|LONGTEXT|TEXT|DATE|DATETIME|TIME|FLOAT|DOUBLE)(?:\s*\([^)]+\))?)\s*'
             r'=\s*(.+)$',
             inner,
             flags=re.I | re.S,
@@ -1329,6 +1329,12 @@ END$$""",
         text,
     )
     text = fix_mysql_control_flow(text)
+    text = re.sub(
+        r'DECLARE\s+(v_\w+)\s+(\w+(?:\s*\([^)]+\))?)\s*=\s*([^;]+);',
+        r'DECLARE \1 \2;\n    SET \1 = \3;',
+        text,
+        flags=re.I,
+    )
     return text
 
 
@@ -1373,8 +1379,8 @@ def lint_mysql_files() -> list[str]:
                         issues.append(f'{path.name}:{i}: IF without THEN: {s[:90]}')
             if re.search(r'(?:p_|v_)\w+\s*=\s*\w+\s+INTO\b', s, re.I):
                 issues.append(f'{path.name}:{i}: SELECT assign leftover: {s[:90]}')
-            if '@@' in s:
-                issues.append(f'{path.name}:{i}: @@variable: {s[:80]}')
+            if re.search(r'DECLARE\s+v_\w+\s+\w+(?:\s*\([^)]+\))?\s*=', s, re.I):
+                issues.append(f'{path.name}:{i}: DECLARE uses = (MySQL needs DEFAULT or SET): {s[:90]}')
     return issues
 
 
