@@ -51,6 +51,18 @@ def call_simple(cursor, proc, params):
     raise RuntimeError('call_simple: use rama SQL Server en el servicio')
 
 
+def call_proc_rows(cursor, proc, params=None, mssql_args=''):
+    """SP de solo lectura. params posicionales; mssql_args es '@Foo=%s, @Bar=%s'."""
+    params = list(params or [])
+    if is_mysql():
+        return call_simple(cursor, proc, params)
+    sql = f'EXEC dbo.{proc}'
+    if mssql_args:
+        sql = f'{sql} {mssql_args}'
+    cursor.execute(sql, params)
+    return cursor_rows(cursor)
+
+
 def call_obtain(proc, param):
     with connection.cursor() as cursor:
         if is_mysql():

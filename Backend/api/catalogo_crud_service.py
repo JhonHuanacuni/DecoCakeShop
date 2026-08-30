@@ -190,7 +190,4 @@ def buscar_clientes(buscar):
     if len(q) < 3:
         return []
     with connection.cursor() as cursor:
-        cursor.execute('EXEC dbo.usp_cliente_buscar @Buscar=%s', [q])
-        if not cursor.description:
-            return []
-        return sp.cursor_rows(cursor)
+        return sp.call_proc_rows(cursor, 'usp_cliente_buscar', [q], '@Buscar=%s')

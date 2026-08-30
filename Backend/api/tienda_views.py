@@ -23,8 +23,7 @@ def _producto_publico(row):
 
 def _categorias():
     with connection.cursor() as cursor:
-        cursor.execute('EXEC dbo.usp_tienda_categorias')
-        return sp.cursor_rows(cursor)
+        return sp.call_proc_rows(cursor, 'usp_tienda_categorias')
 
 
 @csrf_exempt
@@ -36,14 +35,18 @@ def tienda_catalogo(request):
         ids = (request.GET.get('ids') or '').strip()
         if ids:
             with connection.cursor() as cursor:
-                cursor.execute('EXEC dbo.usp_tienda_favoritos @Ids=%s', [ids])
-                productos = [_producto_publico(p) for p in sp.cursor_rows(cursor)]
+                productos = [
+                    _producto_publico(p)
+                    for p in sp.call_proc_rows(cursor, 'usp_tienda_favoritos', [ids], '@Ids=%s')
+                ]
             return JsonResponse({'categorias': categorias, 'productos': productos, 'total': len(productos)})
 
         if request.GET.get('destacados') == '1':
             with connection.cursor() as cursor:
-                cursor.execute('EXEC dbo.usp_tienda_destacados')
-                productos = [_producto_publico(p) for p in sp.cursor_rows(cursor)]
+                productos = [
+                    _producto_publico(p)
+                    for p in sp.call_proc_rows(cursor, 'usp_tienda_destacados')
+                ]
             return JsonResponse({'categorias': categorias, 'productos': productos, 'total': len(productos)})
 
         try:
@@ -106,8 +109,9 @@ def tienda_cupon(request):
         return JsonResponse({'ok': False, 'error': 'Ingresa un cupón.'}, status=400)
     try:
         with connection.cursor() as cursor:
-            cursor.execute('EXEC dbo.usp_cupon_validar @Codigo=%s, @Subtotal=%s', [codigo, subtotal])
-            rows = sp.cursor_rows(cursor)
+            rows = sp.call_proc_rows(
+                cursor, 'usp_cupon_validar', [codigo, subtotal], '@Codigo=%s, @Subtotal=%s',
+            )
         if not rows:
             return JsonResponse({'ok': False, 'error': 'El cupón no es válido o no aplica a este monto.'}, status=400)
         row = rows[0]
@@ -132,18 +136,31 @@ def tienda_cupones(request):
         return JsonResponse({'error': 'Método no permitido'}, status=405)
     try:
         with connection.cursor() as cursor:
-            cursor.execute(
-                """
-                DECLARE @Hoy DATE = CONVERT(date, GETDATE());
-                SELECT CODIGO, DESCRIPCION, TIPO, VALOR, MINIMO, USOSMAX
-                FROM CUPON
-                WHERE ESTADO = 'Activo'
-                  AND (USOSMAX IS NULL OR USOS < USOSMAX)
-                  AND (FECHAINICIO IS NULL OR FECHAINICIO = '' OR TRY_CONVERT(date, STUFF(STUFF(FECHAINICIO,5,0,'/'),3,0,'/'), 103) <= @Hoy)
-                  AND (FECHAFIN IS NULL OR FECHAFIN = '' OR TRY_CONVERT(date, STUFF(STUFF(FECHAFIN,5,0,'/'),3,0,'/'), 103) >= @Hoy)
-                ORDER BY CODIGO
-                """
-            )
+            if sp.is_mysql():
+                cursor.execute(
+                    """
+                    SELECT CODIGO, DESCRIPCION, TIPO, VALOR, MINIMO, USOSMAX
+                    FROM CUPON
+                    WHERE ESTADO = 'Activo'
+                      AND (USOSMAX IS NULL OR USOS < USOSMAX)
+                      AND (FECHAINICIO IS NULL OR FECHAINICIO = '' OR STR_TO_DATE(FECHAINICIO, '%d%m%Y') <= CURDATE())
+                      AND (FECHAFIN IS NULL OR FECHAFIN = '' OR STR_TO_DATE(FECHAFIN, '%d%m%Y') >= CURDATE())
+                    ORDER BY CODIGO
+                    """
+                )
+            else:
+                cursor.execute(
+                    """
+                    DECLARE @Hoy DATE = CONVERT(date, GETDATE());
+                    SELECT CODIGO, DESCRIPCION, TIPO, VALOR, MINIMO, USOSMAX
+                    FROM CUPON
+                    WHERE ESTADO = 'Activo'
+                      AND (USOSMAX IS NULL OR USOS < USOSMAX)
+                      AND (FECHAINICIO IS NULL OR FECHAINICIO = '' OR TRY_CONVERT(date, STUFF(STUFF(FECHAINICIO,5,0,'/'),3,0,'/'), 103) <= @Hoy)
+                      AND (FECHAFIN IS NULL OR FECHAFIN = '' OR TRY_CONVERT(date, STUFF(STUFF(FECHAFIN,5,0,'/'),3,0,'/'), 103) >= @Hoy)
+                    ORDER BY CODIGO
+                    """
+                )
             rows = sp.cursor_rows(cursor)
         cupones = []
         for row in rows:
