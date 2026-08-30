@@ -51,13 +51,11 @@ def eliminar_producto(id_val, actor=None):
 def catalogos_producto():
     with connection.cursor() as cursor:
         cursor.execute(
-            """
-            SELECT IDCATEGORIA AS value, NOMBRE AS label FROM CATEGORIA WHERE ESTADO = 'Activo' ORDER BY ORDEN, NOMBRE;
-            SELECT IDUNIDAD AS value, NOMBRE AS label FROM UNIDAD WHERE ESTADO = 'Activo' ORDER BY NOMBRE;
-            """
+            "SELECT IDCATEGORIA AS value, NOMBRE AS label FROM CATEGORIA WHERE ESTADO = 'Activo' ORDER BY ORDEN, NOMBRE"
         )
         categorias = sp.cursor_rows(cursor)
-        unidades = []
-        if cursor.nextset() and cursor.description:
-            unidades = sp.cursor_rows(cursor)
+        cursor.execute(
+            "SELECT IDUNIDAD AS value, NOMBRE AS label FROM UNIDAD WHERE ESTADO = 'Activo' ORDER BY NOMBRE"
+        )
+        unidades = sp.cursor_rows(cursor)
     return {'categorias': categorias, 'unidades': unidades}

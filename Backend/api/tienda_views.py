@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.db import connection
 from . import sp_runner as sp
 from .crud_exec import escribir, listar_paginado
+from .catalogo_crud_service import listar_promociones_publicas
 
 
 def _decode_foto(row):
@@ -214,10 +215,9 @@ def tienda_promociones(request):
     if request.method != 'GET':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
     try:
-        with connection.cursor() as cursor:
-            rows = [_promo_publica(r) for r in sp.call_proc_rows(cursor, 'usp_promocion_publicas')]
-        slides = [r for r in rows if r.get('TIPO') == 'slider']
-        cards = [r for r in rows if r.get('TIPO') == 'card']
+        rows = [_promo_publica(r) for r in listar_promociones_publicas()]
+        slides = [r for r in rows if (r.get('TIPO') or '').lower() == 'slider']
+        cards = [r for r in rows if (r.get('TIPO') or '').lower() == 'card']
         return JsonResponse({'slides': slides, 'cards': cards})
     except Exception as exc:
         return JsonResponse({'error': str(exc)}, status=500)

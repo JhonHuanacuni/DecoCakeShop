@@ -172,22 +172,31 @@ def insertar_pago_cotizacion(id_val, payload, actor=None):
 def catalogos_cotizacion():
     with connection.cursor() as cursor:
         cursor.execute(
+            "SELECT IDCLIENTE AS value, NOMBRE AS label FROM CLIENTE WHERE ESTADO = 'Activo' ORDER BY NOMBRE"
+        )
+        clientes = sp.cursor_rows(cursor)
+        cursor.execute(
+            "SELECT IDTIPOENTREGA AS value, NOMBRE AS label, REQUIEREDIRECCION "
+            "FROM TIPO_ENTREGA WHERE ESTADO = 'Activo' ORDER BY NOMBRE"
+        )
+        tipos = sp.cursor_rows(cursor)
+        cursor.execute(
             """
-            SELECT IDCLIENTE AS value, NOMBRE AS label FROM CLIENTE WHERE ESTADO = 'Activo' ORDER BY NOMBRE;
-            SELECT IDTIPOENTREGA AS value, NOMBRE AS label, REQUIEREDIRECCION FROM TIPO_ENTREGA WHERE ESTADO = 'Activo' ORDER BY NOMBRE;
             SELECT p.IDPRODUCTO AS value, p.NOMBRE AS label, p.PRECIO, p.STOCK, p.DESCRIPCION, p.FOTO,
                    p.IDCATEGORIA, c.NOMBRE AS CATEGORIA_NOMBRE
             FROM PRODUCTO p INNER JOIN CATEGORIA c ON c.IDCATEGORIA=p.IDCATEGORIA
-            WHERE p.ESTADO = 'Activo' ORDER BY c.ORDEN, p.NOMBRE;
-            SELECT IDFORMAPAGO AS value, NOMBRE AS label FROM FORMA_PAGO WHERE ESTADO = 'Activo' ORDER BY NOMBRE;
-            SELECT IDCATEGORIA AS value, NOMBRE AS label FROM CATEGORIA WHERE ESTADO = 'Activo' ORDER BY ORDEN, NOMBRE;
+            WHERE p.ESTADO = 'Activo' ORDER BY c.ORDEN, p.NOMBRE
             """
         )
-        clientes = sp.cursor_rows(cursor)
-        tipos = sp.cursor_rows(cursor) if cursor.nextset() else []
-        productos = sp.cursor_rows(cursor) if cursor.nextset() else []
-        formas = sp.cursor_rows(cursor) if cursor.nextset() else []
-        categorias = sp.cursor_rows(cursor) if cursor.nextset() else []
+        productos = sp.cursor_rows(cursor)
+        cursor.execute(
+            "SELECT IDFORMAPAGO AS value, NOMBRE AS label FROM FORMA_PAGO WHERE ESTADO = 'Activo' ORDER BY NOMBRE"
+        )
+        formas = sp.cursor_rows(cursor)
+        cursor.execute(
+            "SELECT IDCATEGORIA AS value, NOMBRE AS label FROM CATEGORIA WHERE ESTADO = 'Activo' ORDER BY ORDEN, NOMBRE"
+        )
+        categorias = sp.cursor_rows(cursor)
     for p in productos:
         if p.get('PRECIO') is not None:
             p['PRECIO'] = float(p['PRECIO'])
