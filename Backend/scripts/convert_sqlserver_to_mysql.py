@@ -1307,8 +1307,8 @@ END$$""",
         text,
     )
     text = re.sub(
-        r"WHERE IDCLIENTE=v_IdCliente;\n\n      CALL usp_siguiente_id\('VEN'",
-        "WHERE IDCLIENTE=v_IdCliente;\n    END IF;\n\n      CALL usp_siguiente_id('VEN'",
+        r"(WHERE IDCLIENTE=v_IdCliente;)\s*\n(\s*)CALL usp_siguiente_id\('VEN'",
+        r"\1\n    END IF;\n\2CALL usp_siguiente_id('VEN'",
         text,
     )
     text = re.sub(
