@@ -115,6 +115,11 @@ sudo apache2ctl configtest && sudo systemctl reload apache2
 
 sudo certbot --apache -d decocakeshop.usercodex.com
 
+# Si HTTPS da 404 (Certbot a veces deja el :443 sin DocumentRoot):
+chmod 755 /home/usercodex
+sudo cp ~/decocakeshop_src/Backend/deploy/decocakeshop.usercodex.com-le-ssl.conf /etc/apache2/sites-available/
+sudo apache2ctl configtest && sudo systemctl reload apache2
+
 # =============================================================================
 # Si algo falla
 # =============================================================================
