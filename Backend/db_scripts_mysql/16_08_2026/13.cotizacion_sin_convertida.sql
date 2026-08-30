@@ -32,8 +32,9 @@ DECLARE v_Total DECIMAL(12,2);
     IF v_Estado IS NULL THEN LEAVE main; END IF;
     IF v_Estado = 'Anulada' THEN LEAVE main; END IF;
     SELECT IFNULL(SUM(MONTO),0) INTO v_Pagado FROM COTIZACION_PAGO WHERE IDCOTIZACION=p_Id;
-    IF v_Pagado >= v_Total AND v_Total > 0 THEN SET v_Estado='Pagado'; END IF;
+    IF v_Pagado >= v_Total AND v_Total > 0 THEN SET v_Estado='Pagado';
     ELSE SET v_Estado='Deuda';
+    END IF;
     UPDATE COTIZACION SET ESTADO=v_Estado,
         MODIFICADOPOR=fn_actor(), FECHAMODIFICACION=fn_fecha_ddmmyyyy(), HORAMODIFICACION=TIME_FORMAT(NOW(), '%H:%i:%s')
     WHERE IDCOTIZACION=p_Id;

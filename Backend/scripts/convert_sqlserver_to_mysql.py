@@ -529,6 +529,13 @@ def convert_if_blocks(text: str) -> str:
         flags=re.I,
     )
     text = re.sub(
+        r'(?<!ELSE)IF\s+([^;\n]+?)\s+SET\s+([^;]+);\s*'
+        r'ELSE\s+SET\s+([^;]+);',
+        r'IF \1 THEN SET \2;\n    ELSE SET \3;\n    END IF;',
+        text,
+        flags=re.I,
+    )
+    text = re.sub(
         r'IF\s+(.+?)\s+BEGIN\s+SET\s+([^;]+);\s+SET\s+([^;]+);\s+RETURN;\s+END',
         r'IF \1 THEN SET \2; SET \3; LEAVE main; END IF;',
         text,
@@ -1152,6 +1159,12 @@ def fix_mysql_control_flow(text: str) -> str:
     text = re.sub(r'(?m)^([ \t]+)END[ \t]*$', r'\1END IF;', text)
     text = re.sub(r'\bELSE\s+IF\b', 'ELSEIF', text, flags=re.I)
     text = re.sub(r'\bELSEIF\s+THEN\b', 'ELSEIF', text, flags=re.I)
+    text = re.sub(
+        r'(IF [^\n]+ THEN SET [^;]+;) END IF;\s*\n(\s*)ELSE SET ([^;]+);',
+        r'\1\n\2ELSE SET \3;\n\2END IF;',
+        text,
+        flags=re.I,
+    )
     return text
 
 
@@ -1349,8 +1362,10 @@ def lint_mysql_files() -> list[str]:
                 issues.append(f'{path.name}:{i}: T-SQL leftover: {s[:80]}')
             if su == 'END' and i < len(lines) and not lines[i].strip().upper().startswith('WHERE'):
                 issues.append(f'{path.name}:{i}: bare END (should be END IF)')
-            if su.startswith('ELSE IF'):
-                issues.append(f'{path.name}:{i}: ELSE IF (use ELSEIF)')
+            if su.startswith('ELSE SET'):
+                prev = lines[i - 2].strip().upper() if i >= 2 else ''
+                if prev.endswith('END IF;'):
+                    issues.append(f'{path.name}:{i}: dangling ELSE after END IF')
             if re.match(r'IF\s+', s, re.I) and not any(su.startswith(p) for p in skip_if_prefixes):
                 if 'THEN' not in su and not s.endswith('(') and not s.endswith('AND'):
                     nxt = lines[i].strip() if i < len(lines) else ''
