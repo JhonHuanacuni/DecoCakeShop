@@ -26,7 +26,6 @@ DECLARE v_offset INT DEFAULT 0;
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR p.NOMBRE LIKE CONCAT('%', p_Buscar, '%') OR p.IDPRODUCTO LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR p.ESTADO=p_Estado)
       AND (p_IdCategoria IS NULL OR p_IdCategoria='' OR p.IDCATEGORIA=p_IdCategoria);
-
     SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT p.IDPRODUCTO, p.NOMBRE, p.DESCRIPCION, p.PRECIO, p.STOCK, p.IDCATEGORIA, c.NOMBRE AS CATEGORIA_NOMBRE,
            p.IDUNIDAD, u.NOMBRE AS UNIDAD_NOMBRE, p.ESTADO,
@@ -100,7 +99,7 @@ CREATE PROCEDURE usp_producto_insertar(
 main: BEGIN
 DECLARE v_Id VARCHAR(50);
     IF p_Nombre IS NULL OR TRIM(p_Nombre)='' THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el nombre.'; LEAVE main; END IF;
-    IF p_IdCategoria IS NULL OR NOT EXISTS (SELECT 1 FROM CATEGORIA WHERE IDCATEGORIA=p_IdCategoria) THEN SET p_Resultado=0; SET p_Mensaje='Selecciona una categoría.'; LEAVE main; END IF; THEN
+    IF p_IdCategoria IS NULL OR NOT EXISTS (SELECT 1 FROM CATEGORIA WHERE IDCATEGORIA=p_IdCategoria) THEN SET p_Resultado=0; SET p_Mensaje='Selecciona una categoría.'; LEAVE main; END IF;
       CALL usp_siguiente_id('PRD', 'PRODUCTO', 'IDPRODUCTO', v_Id);
     INSERT INTO PRODUCTO (IDPRODUCTO,NOMBRE,DESCRIPCION,PRECIO,STOCK,IDCATEGORIA,IDUNIDAD,ESTADO,FOTO,
         CREADOPOR,FECHACREACION,HORACREACION,MODIFICADOPOR,FECHAMODIFICACION,HORAMODIFICACION)

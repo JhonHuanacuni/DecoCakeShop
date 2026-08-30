@@ -89,7 +89,6 @@ DECLARE v_offset INT DEFAULT 0;
     WHERE (p_Buscar IS NULL OR p_Buscar = '' OR u.IDUSUARIO LIKE CONCAT('%', p_Buscar, '%') OR u.NOMBRE LIKE CONCAT('%', p_Buscar, '%')
            OR u.APELLIDO LIKE CONCAT('%', p_Buscar, '%') OR u.DNI LIKE CONCAT('%', p_Buscar, '%') OR u.EMAIL LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado = '' OR u.ESTADO = p_Estado);
-
     SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT u.IDUSUARIO, u.NOMBRE, u.APELLIDO, u.DNI, u.EMAIL, u.TELEFONO, u.DIRECCION, u.ESTADO,
            u.IDTIPOUSUARIO, t.DESCRIPCION AS TIPOUSUARIO_DESCRIPCION,

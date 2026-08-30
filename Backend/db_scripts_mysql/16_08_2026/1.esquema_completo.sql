@@ -16,7 +16,6 @@ SET FOREIGN_KEY_CHECKS = 0;
      - Auditoría en tablas principales: CREADOPOR, FECHACREACION, HORACREACION,
        MODIFICADOPOR, FECHAMODIFICACION, HORAMODIFICACION
    ============================================================================ */
-
 DROP PROCEDURE IF EXISTS usp_validate_user;
 DROP FUNCTION IF EXISTS fn_fecha_ddmmyyyy;
 DROP FUNCTION IF EXISTS fn_actor;
@@ -382,16 +381,13 @@ INSERT INTO TIPOUSUARIO (IDTIPOUSUARIO, DESCRIPCION) VALUES
 ('1', 'Vendedor'),
 ('2', 'Almacén'),
 ('3', 'Administrador');
-
 INSERT INTO TIPO_PERMISO (IDTIPOPERMISO, DESCRIPCION) VALUES
 ('TP001', 'VER'),
 ('TP002', 'CREAR'),
 ('TP003', 'EDITAR'),
 ('TP004', 'ELIMINAR');
-
 SET @F = fn_fecha_ddmmyyyy();
 SET @H = TIME_FORMAT(NOW(), '%H:%i:%s');
-
 INSERT INTO USUARIO (IDUSUARIO, CONTRA, NOMBRE, APELLIDO, DNI, EMAIL, TELEFONO, ESTADO, IDTIPOUSUARIO,
     CREADOPOR, FECHACREACION, HORACREACION, MODIFICADOPOR, FECHAMODIFICACION, HORAMODIFICACION)
 VALUES
@@ -401,7 +397,6 @@ VALUES
  'sistema', @F, @H, 'sistema', @F, @H),
 ('almacen', '1234', 'Luis', 'Almacén', '00000003', 'almacen@decocake.local', NULL, 'Activo', '2',
  'sistema', @F, @H, 'sistema', @F, @H);
-
 INSERT INTO MODULO (IDMODULO, NOMBRE, DESCRIPCION, ICONO, ORDEN, ACTIVO) VALUES
 ('MOD001', 'Dashboard', 'Resumen de la importadora', 'faGauge', 1, 1),
 ('MOD002', 'Usuarios', 'Gestión de usuarios por rol', 'faUsers', 2, 1),
@@ -411,58 +406,48 @@ INSERT INTO MODULO (IDMODULO, NOMBRE, DESCRIPCION, ICONO, ORDEN, ACTIVO) VALUES
 ('MOD006', 'Mantenedores', 'Catálogos del sistema', 'faTags', 6, 1),
 ('MOD007', 'Auditoría', 'Historial de cambios', 'faClipboardList', 7, 1),
 ('MOD008', 'Administración de Módulos', 'Acceso por usuario y rol', 'faCog', 8, 1);
-
 INSERT INTO SUBMODULO (IDSUBMODULO, IDMODULO, NOMBRE, ICONO, ORDEN, ACTIVO) VALUES
 ('SUB001', 'MOD006', 'Categorías', 'faLayerGroup', 1, 1),
 ('SUB002', 'MOD006', 'Clientes', 'faIdCard', 2, 1),
 ('SUB003', 'MOD006', 'Unidades', 'faBox', 3, 1),
 ('SUB004', 'MOD006', 'Formas de pago', 'faMoneyBill', 4, 1),
 ('SUB005', 'MOD006', 'Tipos de entrega', 'faTruck', 5, 1);
-
 /* Admin: todos los módulos con todos los permisos */
 INSERT INTO GRUPO_MODULO (IDGRUPOMODULO, IDTIPOUSUARIO, IDMODULO, IDTIPOPERMISO)
 SELECT CONCAT('GRM3', m.IDMODULO, p.IDTIPOPERMISO), '3', m.IDMODULO, p.IDTIPOPERMISO
 FROM MODULO m CROSS JOIN TIPO_PERMISO p;
-
 /* Vendedor: dashboard, productos (ver), cotizaciones, ventas, mantenedores (clientes) */
 INSERT INTO GRUPO_MODULO (IDGRUPOMODULO, IDTIPOUSUARIO, IDMODULO, IDTIPOPERMISO)
 SELECT CONCAT('GRM1', x.IDMODULO, p.IDTIPOPERMISO), '1', x.IDMODULO, p.IDTIPOPERMISO
 FROM (SELECT 'MOD001' AS IDMODULO UNION ALL SELECT 'MOD003' UNION ALL SELECT 'MOD004' UNION ALL SELECT 'MOD005' UNION ALL SELECT 'MOD006') x
 CROSS JOIN TIPO_PERMISO p;
-
 /* Almacén: dashboard, productos, mantenedores */
 INSERT INTO GRUPO_MODULO (IDGRUPOMODULO, IDTIPOUSUARIO, IDMODULO, IDTIPOPERMISO)
 SELECT CONCAT('GRM2', x.IDMODULO, p.IDTIPOPERMISO), '2', x.IDMODULO, p.IDTIPOPERMISO
 FROM (SELECT 'MOD001' AS IDMODULO UNION ALL SELECT 'MOD003' UNION ALL SELECT 'MOD006') x
 CROSS JOIN TIPO_PERMISO p;
-
 INSERT INTO CATEGORIA (IDCATEGORIA, NOMBRE, DESCRIPCION, ORDEN, ESTADO, CREADOPOR, FECHACREACION, HORACREACION, MODIFICADOPOR, FECHAMODIFICACION, HORAMODIFICACION)
 VALUES
 ('CAT001', 'Fondant y pastas', 'Coberturas y pastas de modelar', 1, 'Activo', 'sistema', @F, @H, 'sistema', @F, @H),
 ('CAT002', 'Colorantes', 'Colorantes en gel, polvo y spray', 2, 'Activo', 'sistema', @F, @H, 'sistema', @F, @H),
 ('CAT003', 'Moldes', 'Moldes de silicón y cortadores', 3, 'Activo', 'sistema', @F, @H, 'sistema', @F, @H);
-
 INSERT INTO UNIDAD (IDUNIDAD, NOMBRE, ABREVIATURA, ESTADO, CREADOPOR, FECHACREACION, HORACREACION, MODIFICADOPOR, FECHAMODIFICACION, HORAMODIFICACION)
 VALUES
 ('UNI001', 'Unidad', 'und', 'Activo', 'sistema', @F, @H, 'sistema', @F, @H),
 ('UNI002', 'Kilogramo', 'kg', 'Activo', 'sistema', @F, @H, 'sistema', @F, @H),
 ('UNI003', 'Caja', 'cja', 'Activo', 'sistema', @F, @H, 'sistema', @F, @H);
-
 INSERT INTO FORMA_PAGO (IDFORMAPAGO, NOMBRE, ESTADO, CREADOPOR, FECHACREACION, HORACREACION, MODIFICADOPOR, FECHAMODIFICACION, HORAMODIFICACION)
 VALUES
 ('FPA001', 'Efectivo', 'Activo', 'sistema', @F, @H, 'sistema', @F, @H),
 ('FPA002', 'Transferencia', 'Activo', 'sistema', @F, @H, 'sistema', @F, @H),
 ('FPA003', 'Yape / Plin', 'Activo', 'sistema', @F, @H, 'sistema', @F, @H);
-
 INSERT INTO TIPO_ENTREGA (IDTIPOENTREGA, NOMBRE, REQUIEREDIRECCION, ESTADO, CREADOPOR, FECHACREACION, HORACREACION, MODIFICADOPOR, FECHAMODIFICACION, HORAMODIFICACION)
 VALUES
 ('TEN001', 'Recojo en tienda', 0, 'Activo', 'sistema', @F, @H, 'sistema', @F, @H),
 ('TEN002', 'Delivery', 1, 'Activo', 'sistema', @F, @H, 'sistema', @F, @H);
-
 INSERT INTO CLIENTE (IDCLIENTE, NOMBRE, DOCUMENTO, TELEFONO, EMAIL, DIRECCION, ESTADO, CREADOPOR, FECHACREACION, HORACREACION, MODIFICADOPOR, FECHAMODIFICACION, HORAMODIFICACION)
 VALUES
 ('CLI001', 'Pastelería Dulce Luna', '20123456789', '999111222', 'luna@correo.com', 'Av. Primavera 123', 'Activo', 'sistema', @F, @H, 'sistema', @F, @H);
-
 INSERT INTO PRODUCTO (IDPRODUCTO, NOMBRE, DESCRIPCION, PRECIO, STOCK, IDCATEGORIA, IDUNIDAD, ESTADO, CREADOPOR, FECHACREACION, HORACREACION, MODIFICADOPOR, FECHAMODIFICACION, HORAMODIFICACION)
 VALUES
 ('PRD001', 'Fondant blanco 1 kg', 'Pasta de cobertura', 28.50, 40, 'CAT001', 'UNI002', 'Activo', 'sistema', @F, @H, 'sistema', @F, @H),
@@ -481,7 +466,6 @@ DECLARE v_IDTIPOUSUARIO VARCHAR(50);
     SELECT IDTIPOUSUARIO INTO v_IDTIPOUSUARIO
     FROM USUARIO
     WHERE IDUSUARIO = p_username AND CONTRA = p_password AND ESTADO = 'Activo';
-
     IF v_IDTIPOUSUARIO IS NOT NULL THEN
         SELECT 1 AS is_valid,
             CASE v_IDTIPOUSUARIO

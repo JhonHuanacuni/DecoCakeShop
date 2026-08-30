@@ -18,7 +18,6 @@ main: BEGIN
 DECLARE v_q VARCHAR(200);
     SET v_q = TRIM(IFNULL(p_Buscar,'')); 
     IF CHAR_LENGTH(v_q) < 3 THEN LEAVE main; END IF;
-
     SELECT IDCLIENTE AS value, NOMBRE AS label
     FROM CLIENTE
     WHERE ESTADO = 'Activo'

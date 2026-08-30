@@ -32,7 +32,7 @@ DECLARE v_Est VARCHAR(50);
     DECLARE v_Id VARCHAR(50);
     IF p_IdCliente IS NULL THEN SET p_Resultado=0; SET p_Mensaje='Selecciona un cliente.'; LEAVE main; END IF;
     SET v_Est = IFNULL(NULLIF(TRIM(p_Estado),''),'Pendiente'); 
-    IF v_Est NOT IN ('Pendiente','Empaquetado','Enviado') THEN SET v_Est='Pendiente'; END IF; THEN
+    IF v_Est NOT IN ('Pendiente','Empaquetado','Enviado') THEN SET v_Est='Pendiente'; END IF;
       CALL usp_siguiente_id('VEN', 'VENTA', 'IDVENTA', v_Id);
     INSERT INTO VENTA (IDVENTA,IDCLIENTE,NOMBRECLIENTE,IDFORMAPAGO,IDTIPOENTREGA,DIRECCIONENTREGA,COSTODELIVERY,SUBTOTAL,TOTAL,OBSERVACIONES,ESTADO,COMPROBANTEPAGO,
         CREADOPOR,FECHACREACION,HORACREACION,MODIFICADOPOR,FECHAMODIFICACION,HORAMODIFICACION)
@@ -119,7 +119,6 @@ DECLARE v_Nom VARCHAR(200);
     IF p_IdTipoEntrega IS NOT NULL AND EXISTS (SELECT 1 FROM TIPO_ENTREGA WHERE IDTIPOENTREGA=p_IdTipoEntrega AND REQUIEREDIRECCION=1)
        AND (TRIM(IFNULL(p_Direccion,''))='')
     THEN SET p_Resultado=0; SET p_Mensaje='Ingresa la dirección de entrega.'; LEAVE main; END IF;
-
      
     SELECT IDCLIENTE INTO v_IdCliente FROM CLIENTE WHERE TELEFONO=v_Tel ORDER BY FECHACREACION DESC LIMIT 1;
     IF v_IdCliente IS NULL THEN
@@ -130,20 +129,16 @@ DECLARE v_Nom VARCHAR(200);
         UPDATE CLIENTE SET NOMBRE=v_Nom, EMAIL=IFNULL(p_Email,EMAIL), DIRECCION=IFNULL(NULLIF(TRIM(p_Direccion),''),DIRECCION),
             MODIFICADOPOR=IFNULL(fn_actor(),'tienda'), FECHAMODIFICACION=fn_fecha_ddmmyyyy(), HORAMODIFICACION=TIME_FORMAT(NOW(), '%H:%i:%s')
         WHERE IDCLIENTE=v_IdCliente;
-    END IF;
-
       CALL usp_siguiente_id('VEN', 'VENTA', 'IDVENTA', v_Id);
     INSERT INTO VENTA (IDVENTA,IDCLIENTE,NOMBRECLIENTE,IDFORMAPAGO,IDTIPOENTREGA,DIRECCIONENTREGA,COSTODELIVERY,SUBTOTAL,TOTAL,OBSERVACIONES,ESTADO,COMPROBANTEPAGO,
         CREADOPOR,FECHACREACION,HORACREACION,MODIFICADOPOR,FECHAMODIFICACION,HORAMODIFICACION)
     VALUES (v_Id,v_IdCliente,v_Nom,p_IdFormaPago,p_IdTipoEntrega,p_Direccion,0,0,0,p_Observaciones,'Pendiente',p_ComprobantePago,
         IFNULL(fn_actor(),'tienda'),fn_fecha_ddmmyyyy(),TIME_FORMAT(NOW(), '%H:%i:%s'),IFNULL(fn_actor(),'tienda'),fn_fecha_ddmmyyyy(),TIME_FORMAT(NOW(), '%H:%i:%s'));
-
     CALL usp_venta_guardar_detalle(v_Id, p_DetalleJson);
     IF NOT EXISTS (SELECT 1 FROM VENTA_DETALLE WHERE IDVENTA=v_Id) THEN
             DELETE FROM VENTA WHERE IDVENTA=v_Id;
         SET p_Resultado=0; SET p_Mensaje='No se pudieron guardar los productos.'; LEAVE main;
     END IF;
-
     SET p_Resultado=1; SET p_Mensaje=CONCAT('Pedido registrado. ', v_Id, '.');
 END$$
 

@@ -103,7 +103,7 @@ DECLARE v_Total DECIMAL(12,2);
     SELECT IFNULL(TOTAL,0) INTO v_Total FROM COTIZACION WHERE IDCOTIZACION=p_Id;
     SELECT IFNULL(SUM(MONTO),0) INTO v_Pagado FROM COTIZACION_PAGO WHERE IDCOTIZACION=p_Id;
     SET v_Saldo = v_Total - v_Pagado;
-    IF p_Monto > v_Saldo + 0.009 THEN SET p_Resultado=0; SET p_Mensaje='El abono no puede ser mayor al saldo pendiente.'; LEAVE main; END IF; THEN
+    IF p_Monto > v_Saldo + 0.009 THEN SET p_Resultado=0; SET p_Mensaje='El abono no puede ser mayor al saldo pendiente.'; LEAVE main; END IF;
      
     CALL usp_siguiente_id('PAG', 'COTIZACION_PAGO', 'IDPAGO', v_IdPago);
     INSERT INTO COTIZACION_PAGO (IDPAGO,IDCOTIZACION,MONTO,TIPO,
@@ -140,7 +140,6 @@ DECLARE v_offset INT DEFAULT 0;
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR q.IDCOTIZACION LIKE CONCAT('%', p_Buscar, '%')
            OR IFNULL(c.NOMBRE,q.NOMBRECLIENTE) LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR q.ESTADO=p_Estado);
-
     SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT q.IDCOTIZACION, q.IDCLIENTE, IFNULL(c.NOMBRE, q.NOMBRECLIENTE) AS CLIENTE_NOMBRE, q.NOMBRECLIENTE,
            q.IDTIPOENTREGA, t.NOMBRE AS TIPOENTREGA_NOMBRE,
@@ -232,7 +231,7 @@ DECLARE v_IdCli VARCHAR(50);
     ELSE
         SET v_IdCli = NULL;
     IF v_Nom IS NULL THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el cliente.'; LEAVE main; END IF;
-    IF p_DetalleJson IS NULL OR CHAR_LENGTH(p_DetalleJson)<3 THEN SET p_Resultado=0; SET p_Mensaje='Agrega al menos un producto.'; LEAVE main; END IF; THEN
+    IF p_DetalleJson IS NULL OR CHAR_LENGTH(p_DetalleJson)<3 THEN SET p_Resultado=0; SET p_Mensaje='Agrega al menos un producto.'; LEAVE main; END IF;
       
     CALL usp_stock_check_json(p_DetalleJson, v_Ok, v_Msg);
     IF v_Ok=0 THEN SET p_Resultado=0; SET p_Mensaje=v_Msg; LEAVE main; END IF;
@@ -242,10 +241,10 @@ DECLARE v_IdCli VARCHAR(50);
     SET v_Est = IFNULL(NULLIF(TRIM(p_Estado),''),'Cotizado'); 
     IF v_Est IN ('Aceptado','Aceptada','Borrador') THEN SET v_Est='Cotizado'; END IF;
     IF v_Est='Enviada' THEN SET v_Est='Enviado'; END IF;
-    IF v_Est NOT IN ('Cotizado','Pagado','Deuda','Empaquetado','Enviado') THEN SET v_Est='Cotizado'; END IF; THEN
+    IF v_Est NOT IN ('Cotizado','Pagado','Deuda','Empaquetado','Enviado') THEN SET v_Est='Cotizado'; END IF;
       CALL usp_siguiente_id('COT', 'COTIZACION', 'IDCOTIZACION', v_Id);
-    BEGIN TRY
-        BEGIN TRAN;
+    
+        START TRANSACTION;
         INSERT INTO COTIZACION (IDCOTIZACION,IDCLIENTE,NOMBRECLIENTE,IDTIPOENTREGA,DIRECCIONENTREGA,COSTODELIVERY,SUBTOTAL,TOTAL,OBSERVACIONES,ESTADO,STOCKRESERVADO,
             CREADOPOR,FECHACREACION,HORACREACION,MODIFICADOPOR,FECHAMODIFICACION,HORAMODIFICACION)
         VALUES (v_Id,v_IdCli,v_Nom,p_IdTipoEntrega,p_DireccionEntrega,IFNULL(p_CostoDelivery,0),0,0,p_Observaciones,v_Est,0,
@@ -257,17 +256,12 @@ DECLARE v_IdCli VARCHAR(50);
                       
             CALL usp_cotizacion_pago_insertar(v_Id, p_MontoInicial, 'Inicial', NULL, v_RPago, v_MPago);
             IF IFNULL(v_RPago,0)=0 THEN
-                            ROLLBACK TRAN;
+                            ROLLBACK;
                 SET p_Resultado=0; SET p_Mensaje=v_MPago; LEAVE main;
             END IF;
-        END
-        COMMIT TRAN;
+        END IF;
+        COMMIT;
         SET p_Resultado=1; SET p_Mensaje='Cotización registrada.';
-    END TRY
-    BEGIN CATCH
-        ROLLBACK;
-        SET p_Resultado=0; SET p_Mensaje=LEFT(ERROR_MESSAGE(),200);
-    END CATCH
 END$$
 
 DELIMITER ;

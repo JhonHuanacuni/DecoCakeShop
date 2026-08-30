@@ -70,7 +70,7 @@ DECLARE v_Forma VARCHAR(50);
     SELECT IFNULL(TOTAL,0) INTO v_Total FROM COTIZACION WHERE IDCOTIZACION=p_Id;
     SELECT IFNULL(SUM(MONTO),0) INTO v_Pagado FROM COTIZACION_PAGO WHERE IDCOTIZACION=p_Id;
     SET v_Saldo = v_Total - v_Pagado;
-    IF p_Monto > v_Saldo + 0.009 THEN SET p_Resultado=0; SET p_Mensaje='El abono no puede ser mayor al saldo pendiente.'; LEAVE main; END IF; THEN
+    IF p_Monto > v_Saldo + 0.009 THEN SET p_Resultado=0; SET p_Mensaje='El abono no puede ser mayor al saldo pendiente.'; LEAVE main; END IF;
      
     CALL usp_siguiente_id('PAG', 'COTIZACION_PAGO', 'IDPAGO', v_IdPago);
     INSERT INTO COTIZACION_PAGO (IDPAGO,IDCOTIZACION,MONTO,TIPO,IDFORMAPAGO,
@@ -240,7 +240,6 @@ DECLARE v_Tipo VARCHAR(50);
     IF EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id AND ESTADO='Anulada') THEN SET p_Resultado=0; SET p_Mensaje='La cotización está anulada.'; LEAVE main; END IF;
     IF EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id AND NULLIF(TRIM(IFNULL(IDVENTA,'')),'') IS NOT NULL) THEN SET p_Resultado=0; SET p_Mensaje='Esta cotización ya tiene un pedido.'; LEAVE main; END IF;
     IF NOT EXISTS (SELECT 1 FROM COTIZACION_DETALLE WHERE IDCOTIZACION=p_Id) THEN SET p_Resultado=0; SET p_Mensaje='La cotización no tiene productos.'; LEAVE main; END IF;
-
     IF EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id AND IFNULL(STOCKRESERVADO,0)=0) THEN
             IF EXISTS (
             SELECT 1 FROM COTIZACION_DETALLE d INNER JOIN PRODUCTO p ON p.IDPRODUCTO=d.IDPRODUCTO
@@ -250,7 +249,6 @@ DECLARE v_Tipo VARCHAR(50);
         CALL usp_stock_desde_detalle(p_Id, -1);
         UPDATE COTIZACION SET STOCKRESERVADO=1 WHERE IDCOTIZACION=p_Id;
     END
-
     SET v_Tipo = NULLIF(TRIM(IFNULL(p_IdTipoEntrega,'')), ''); 
     SET v_Forma = NULLIF(TRIM(IFNULL(p_IdFormaPago,'')), ''); 
     SET v_Dir = NULLIF(TRIM(IFNULL(p_DireccionEntrega,'')), ''); 
@@ -260,16 +258,13 @@ DECLARE v_Tipo VARCHAR(50);
         v_Dir = IFNULL(v_Dir, NULLIF(TRIM(IFNULL(DIRECCIONENTREGA,'')), '')),
         v_Costo = CASE WHEN p_IdTipoEntrega IS NULL AND p_CostoDelivery=0 THEN IFNULL(COSTODELIVERY,0) ELSE v_Costo END
     FROM COTIZACION WHERE IDCOTIZACION=p_Id;
-
     IF v_Tipo IS NULL OR NOT EXISTS (SELECT 1 FROM TIPO_ENTREGA WHERE IDTIPOENTREGA=v_Tipo AND ESTADO='Activo') THEN SET p_Resultado=0; SET p_Mensaje='Selecciona el tipo de entrega.'; LEAVE main; END IF;
     IF EXISTS (SELECT 1 FROM TIPO_ENTREGA WHERE IDTIPOENTREGA=v_Tipo AND REQUIEREDIRECCION=1)
        AND v_Dir IS NULL
     THEN SET p_Resultado=0; SET p_Mensaje='Ingresa la dirección de delivery.'; LEAVE main; END IF;
-
       CALL usp_siguiente_id('VEN', 'VENTA', 'IDVENTA', v_IdVenta);
         
     SELECT SUBTOTAL, IDCLIENTE, NOMBRECLIENTE, OBSERVACIONES INTO v_Sub, v_Cli, v_Nom, v_Obs FROM COTIZACION WHERE IDCOTIZACION=p_Id;
-
     INSERT INTO VENTA (IDVENTA,IDCOTIZACION,IDCLIENTE,NOMBRECLIENTE,IDFORMAPAGO,IDTIPOENTREGA,DIRECCIONENTREGA,COSTODELIVERY,SUBTOTAL,TOTAL,OBSERVACIONES,ESTADO,
         CREADOPOR,FECHACREACION,HORACREACION,MODIFICADOPOR,FECHAMODIFICACION,HORAMODIFICACION)
     VALUES (
@@ -278,12 +273,10 @@ DECLARE v_Tipo VARCHAR(50);
         fn_actor(), fn_fecha_ddmmyyyy(), TIME_FORMAT(NOW(), '%H:%i:%s'),
         fn_actor(), fn_fecha_ddmmyyyy(), TIME_FORMAT(NOW(), '%H:%i:%s')
     );
-
     INSERT INTO VENTA_DETALLE (IDDETALLE, IDVENTA, IDPRODUCTO, CANTIDAD, PRECIOUNITARIO, SUBTOTAL)
     SELECT CONCAT(v_IdVenta, RIGHT(CONCAT('000', CAST(ROW_NUMBER() OVER (ORDER BY IDDETALLE) AS CHAR)), 3)),
            v_IdVenta, IDPRODUCTO, CANTIDAD, PRECIOUNITARIO, SUBTOTAL
     FROM COTIZACION_DETALLE WHERE IDCOTIZACION=p_Id;
-
     UPDATE COTIZACION SET IDVENTA=v_IdVenta,
         IDFORMAPAGO=v_Forma, IDTIPOENTREGA=v_Tipo, DIRECCIONENTREGA=v_Dir, COSTODELIVERY=v_Costo,
         TOTAL=v_Sub + v_Costo,
@@ -291,7 +284,6 @@ DECLARE v_Tipo VARCHAR(50);
         MODIFICADOPOR=fn_actor(), FECHAMODIFICACION=fn_fecha_ddmmyyyy(), HORAMODIFICACION=TIME_FORMAT(NOW(), '%H:%i:%s')
     WHERE IDCOTIZACION=p_Id;
     CALL usp_cotizacion_pago_recalcular(p_Id);
-
     SET p_Resultado=1; SET p_Mensaje=CONCAT('Pedido generado. ', v_IdVenta, '.');
 END$$
 

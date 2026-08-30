@@ -83,7 +83,6 @@ DECLARE v_offset INT DEFAULT 0;
     WHERE (p_Buscar IS NULL OR p_Buscar='' OR q.IDCOTIZACION LIKE CONCAT('%', p_Buscar, '%')
            OR IFNULL(c.NOMBRE,q.NOMBRECLIENTE) LIKE CONCAT('%', p_Buscar, '%'))
       AND (p_Estado IS NULL OR p_Estado='' OR q.ESTADO=p_Estado);
-
     SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT q.IDCOTIZACION, q.IDCLIENTE, IFNULL(c.NOMBRE, q.NOMBRECLIENTE) AS CLIENTE_NOMBRE, q.NOMBRECLIENTE,
            q.IDTIPOENTREGA, t.NOMBRE AS TIPOENTREGA_NOMBRE,
@@ -138,10 +137,10 @@ DECLARE v_IdCli VARCHAR(50);
     ELSE
         SET v_IdCli = NULL;
     IF v_Nom IS NULL THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el cliente.'; LEAVE main; END IF;
-    IF p_DetalleJson IS NULL OR CHAR_LENGTH(p_DetalleJson)<3 THEN SET p_Resultado=0; SET p_Mensaje='Agrega al menos un producto.'; LEAVE main; END IF; THEN
+    IF p_DetalleJson IS NULL OR CHAR_LENGTH(p_DetalleJson)<3 THEN SET p_Resultado=0; SET p_Mensaje='Agrega al menos un producto.'; LEAVE main; END IF;
       
     CALL usp_stock_check_json(p_DetalleJson, v_Ok, v_Msg);
-    IF v_Ok=0 THEN SET p_Resultado=0; SET p_Mensaje=v_Msg; LEAVE main; END IF; THEN
+    IF v_Ok=0 THEN SET p_Resultado=0; SET p_Mensaje=v_Msg; LEAVE main; END IF;
       CALL usp_siguiente_id('COT', 'COTIZACION', 'IDCOTIZACION', v_Id);
     INSERT INTO COTIZACION (IDCOTIZACION,IDCLIENTE,NOMBRECLIENTE,IDTIPOENTREGA,DIRECCIONENTREGA,COSTODELIVERY,SUBTOTAL,TOTAL,OBSERVACIONES,ESTADO,STOCKRESERVADO,
         CREADOPOR,FECHACREACION,HORACREACION,MODIFICADOPOR,FECHAMODIFICACION,HORAMODIFICACION)
@@ -282,7 +281,6 @@ DECLARE v_Tipo VARCHAR(50);
     IF NOT EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id) THEN SET p_Resultado=0; SET p_Mensaje='La cotización no existe.'; LEAVE main; END IF;
     IF EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id AND ESTADO IN ('Convertida','Anulada')) THEN SET p_Resultado=0; SET p_Mensaje='La cotización ya fue convertida o está anulada.'; LEAVE main; END IF;
     IF NOT EXISTS (SELECT 1 FROM COTIZACION_DETALLE WHERE IDCOTIZACION=p_Id) THEN SET p_Resultado=0; SET p_Mensaje='La cotización no tiene productos.'; LEAVE main; END IF;
-
     IF EXISTS (SELECT 1 FROM COTIZACION WHERE IDCOTIZACION=p_Id AND IFNULL(STOCKRESERVADO,0)=0) THEN
             IF EXISTS (
             SELECT 1 FROM COTIZACION_DETALLE d INNER JOIN PRODUCTO p ON p.IDPRODUCTO=d.IDPRODUCTO
@@ -292,17 +290,14 @@ DECLARE v_Tipo VARCHAR(50);
         CALL usp_stock_desde_detalle(p_Id, -1);
         UPDATE COTIZACION SET STOCKRESERVADO=1 WHERE IDCOTIZACION=p_Id;
     END
-
     SET v_Tipo = NULLIF(TRIM(IFNULL(p_IdTipoEntrega,'')), ''); 
     IF v_Tipo IS NULL OR NOT EXISTS (SELECT 1 FROM TIPO_ENTREGA WHERE IDTIPOENTREGA=v_Tipo AND ESTADO='Activo') THEN SET p_Resultado=0; SET p_Mensaje='Selecciona el tipo de entrega.'; LEAVE main; END IF;
     IF EXISTS (SELECT 1 FROM TIPO_ENTREGA WHERE IDTIPOENTREGA=v_Tipo AND REQUIEREDIRECCION=1)
        AND NULLIF(TRIM(IFNULL(p_DireccionEntrega,'')),'') IS NULL
     THEN SET p_Resultado=0; SET p_Mensaje='Ingresa la dirección de delivery.'; LEAVE main; END IF;
-
       CALL usp_siguiente_id('VEN', 'VENTA', 'IDVENTA', v_IdVenta);
         
     SELECT SUBTOTAL, IDCLIENTE, NOMBRECLIENTE, OBSERVACIONES INTO v_Sub, v_Cli, v_Nom, v_Obs FROM COTIZACION WHERE IDCOTIZACION=p_Id;
-
     INSERT INTO VENTA (IDVENTA,IDCOTIZACION,IDCLIENTE,NOMBRECLIENTE,IDFORMAPAGO,IDTIPOENTREGA,DIRECCIONENTREGA,COSTODELIVERY,SUBTOTAL,TOTAL,OBSERVACIONES,ESTADO,
         CREADOPOR,FECHACREACION,HORACREACION,MODIFICADOPOR,FECHAMODIFICACION,HORAMODIFICACION)
     VALUES (
@@ -311,19 +306,16 @@ DECLARE v_Tipo VARCHAR(50);
         fn_actor(), fn_fecha_ddmmyyyy(), TIME_FORMAT(NOW(), '%H:%i:%s'),
         fn_actor(), fn_fecha_ddmmyyyy(), TIME_FORMAT(NOW(), '%H:%i:%s')
     );
-
     INSERT INTO VENTA_DETALLE (IDDETALLE, IDVENTA, IDPRODUCTO, CANTIDAD, PRECIOUNITARIO, SUBTOTAL)
     SELECT CONCAT(v_IdVenta, RIGHT(CONCAT('000', CAST(ROW_NUMBER() OVER (ORDER BY IDDETALLE) AS CHAR)), 3)),
            v_IdVenta, IDPRODUCTO, CANTIDAD, PRECIOUNITARIO, SUBTOTAL
     FROM COTIZACION_DETALLE WHERE IDCOTIZACION=p_Id;
-
     UPDATE COTIZACION SET ESTADO='Convertida', IDVENTA=v_IdVenta,
         IDTIPOENTREGA=v_Tipo, DIRECCIONENTREGA=p_DireccionEntrega, COSTODELIVERY=IFNULL(p_CostoDelivery,0),
         TOTAL=v_Sub + IFNULL(p_CostoDelivery,0),
         ENVIADOPOR=fn_actor(), FECHAENVIO=fn_fecha_ddmmyyyy(), HORAENVIO=TIME_FORMAT(NOW(), '%H:%i:%s'),
         MODIFICADOPOR=fn_actor(), FECHAMODIFICACION=fn_fecha_ddmmyyyy(), HORAMODIFICACION=TIME_FORMAT(NOW(), '%H:%i:%s')
     WHERE IDCOTIZACION=p_Id;
-
     SET p_Resultado=1; SET p_Mensaje=CONCAT('Pedido generado. ', v_IdVenta, '.');
 END$$
 
@@ -343,18 +335,14 @@ CREATE PROCEDURE usp_venta_anular(
 main: BEGIN
 IF NOT EXISTS (SELECT 1 FROM VENTA WHERE IDVENTA=p_Id) THEN SET p_Resultado=0; SET p_Mensaje='El pedido no existe.'; LEAVE main; END IF;
     IF EXISTS (SELECT 1 FROM VENTA WHERE IDVENTA=p_Id AND ESTADO='Anulado') THEN SET p_Resultado=0; SET p_Mensaje='El pedido ya está anulado.'; LEAVE main; END IF;
-
     UPDATE PRODUCTO p INNER JOIN VENTA_DETALLE d ON d.IDPRODUCTO=p.IDPRODUCTO SET p.STOCK = p.STOCK + d.CANTIDAD,
         p.MODIFICADOPOR=fn_actor(), p.FECHAMODIFICACION=fn_fecha_ddmmyyyy(), p.HORAMODIFICACION=TIME_FORMAT(NOW(), '%H:%i:%s') WHERE d.IDVENTA=p_Id;
-
     UPDATE VENTA SET ESTADO='Anulado',
         MODIFICADOPOR=fn_actor(), FECHAMODIFICACION=fn_fecha_ddmmyyyy(), HORAMODIFICACION=TIME_FORMAT(NOW(), '%H:%i:%s')
     WHERE IDVENTA=p_Id;
-
     UPDATE COTIZACION SET ESTADO='Anulada', STOCKRESERVADO=0, IDVENTA=p_Id,
         MODIFICADOPOR=fn_actor(), FECHAMODIFICACION=fn_fecha_ddmmyyyy(), HORAMODIFICACION=TIME_FORMAT(NOW(), '%H:%i:%s')
     WHERE IDVENTA=p_Id;
-
     SET p_Resultado=1; SET p_Mensaje='Pedido anulado. El stock volvió al almacén.';
 END$$
 

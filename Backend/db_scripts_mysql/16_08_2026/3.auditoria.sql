@@ -52,7 +52,6 @@ DECLARE v_offset INT DEFAULT 0;
       AND (p_IdUsuario IS NULL OR p_IdUsuario='' OR a.IDUSUARIO=p_IdUsuario)
       AND (p_FechaDesde IS NULL OR p_FechaDesde='' OR a.FECHA>=p_FechaDesde)
       AND (p_FechaHasta IS NULL OR p_FechaHasta='' OR a.FECHA<=p_FechaHasta);
-
     SET v_offset = (p_Pagina - 1) * p_TamanioPagina;
     SELECT a.IDAUDITORIA, a.TABLA, a.IDREGISTRO, a.ACCION, a.IDUSUARIO,
            TRIM(CONCAT(IFNULL(u.NOMBRE,''), ' ', IFNULL(u.APELLIDO,''))) AS USUARIO_NOMBRE,
@@ -96,7 +95,7 @@ DELIMITER $$
 
 CREATE PROCEDURE usp_auditoria_tablas_catalogo()
 main: BEGIN
-SET NOCOUNT ON; SELECT DISTINCT TABLA FROM AUDITORIA ORDER BY TABLA;
+SELECT DISTINCT TABLA FROM AUDITORIA ORDER BY TABLA;
 END$$
 
 DELIMITER ;

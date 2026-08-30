@@ -135,13 +135,13 @@ def convert_types(text: str) -> str:
 
 
 def strip_server_directives(text: str) -> str:
+    text = re.sub(r'\bSET\s+NOCOUNT\s+ON\s*;?', '', text, flags=re.I)
+    text = re.sub(r'\bSET\s+NOCOUNT\s+OFF\s*;?', '', text, flags=re.I)
     lines = []
     for line in text.splitlines():
         s = line.strip().upper()
         if s in {
             'GO',
-            'SET NOCOUNT ON;',
-            'SET NOCOUNT ON',
             'SET QUOTED_IDENTIFIER ON;',
             'SET QUOTED_IDENTIFIER ON',
             'SET ANSI_NULLS ON;',
@@ -150,6 +150,8 @@ def strip_server_directives(text: str) -> str:
         }:
             continue
         if s.startswith('SET QUOTED_IDENTIFIER') or s.startswith('SET ANSI_NULLS'):
+            continue
+        if not s:
             continue
         lines.append(line)
     return '\n'.join(lines)
@@ -532,6 +534,24 @@ def convert_if_blocks(text: str) -> str:
     return text
 
 
+def convert_try_tran(text: str) -> str:
+    """MySQL no tiene TRY/CATCH ni BEGIN TRAN; dejar transacción nativa y un mensaje genérico."""
+    text = re.sub(r'\bBEGIN\s+TRY\b', '', text, flags=re.I)
+    text = re.sub(r'\bEND\s+TRY\b', '', text, flags=re.I)
+    text = re.sub(
+        r'\bBEGIN\s+CATCH\b[\s\S]*?\bEND\s+CATCH\b',
+        '',
+        text,
+        flags=re.I,
+    )
+    text = re.sub(r'\bBEGIN\s+TRAN(?:SACTION)?\b', 'START TRANSACTION', text, flags=re.I)
+    text = re.sub(r'\bCOMMIT\s+TRAN(?:SACTION)?\b', 'COMMIT', text, flags=re.I)
+    text = re.sub(r'\bROLLBACK\s+TRAN(?:SACTION)?\b', 'ROLLBACK', text, flags=re.I)
+    text = text.replace('@@ROWCOUNT', 'ROW_COUNT()')
+    text = re.sub(r'\bERROR_MESSAGE\s*\(\s*\)', "'Error al guardar.'", text, flags=re.I)
+    return text
+
+
 def convert_update_from(text: str) -> str:
     text = re.sub(
         r'UPDATE\s+(\w+)\s+SET\s+([\s\S]+?)\s+FROM\s+(\w+)\s+\1\s+(INNER\s+JOIN\s+[\s\S]+?)\s+WHERE',
@@ -736,6 +756,7 @@ def post_process_body(body: str) -> str:
     body = convert_select_assign(body)
     body = convert_pagination(body)
     body = convert_top(body)
+    body = convert_try_tran(body)
     body = re.sub(r'IF\s+@@TRANCOUNT\s*>\s*0\s+ROLLBACK\s+TRAN\s*;?', 'ROLLBACK;', body, flags=re.I)
     body = re.sub(r'\bRETURN\s*;', 'LEAVE main;', body, flags=re.I)
     body = re.sub(r'\bRETURN\b', 'LEAVE main', body, flags=re.I)
@@ -1061,20 +1082,39 @@ def polish_mysql(text: str) -> str:
         text,
         flags=re.I,
     )
-    text = re.sub(
-        r'IF ([^\n]+)\n(\s*)BEGIN\n',
-        r'IF \1 THEN\n\2',
-        text,
-    )
+    def _if_needs_then(cond: str) -> bool:
+        return not re.search(r'\bTHEN\b', cond, re.I)
+
+    def _if_begin(m):
+        if not _if_needs_then(m.group(1)):
+            return m.group(0)
+        return f'IF {m.group(1)} THEN\n{m.group(2)}'
+
+    def _if_call(m):
+        if not _if_needs_then(m.group(1)):
+            return m.group(0)
+        return f'IF {m.group(1)} THEN\n{m.group(2)}CALL '
+
+    text = re.sub(r'IF ([^\n]+)\n(\s*)BEGIN\n', _if_begin, text)
     text = re.sub(
         r'\n(\s*)END\n(\s*)ELSE\n',
         r'\n\1ELSE\n',
         text,
     )
+    text = re.sub(r'IF ([^\n]+)\n(\s*)CALL ', _if_call, text)
+    text = re.sub(r'END IF;\s+THEN\b', 'END IF;', text, flags=re.I)
+    text = text.replace('@@ROWCOUNT', 'ROW_COUNT()')
     text = re.sub(
-        r'IF ([^\n]+)\n(\s*)CALL ',
-        r'IF \1 THEN\n\2CALL ',
+        r'(ELSE\n\s+CALL usp_cotizacion_pago_recalcular\([^)]+\);)\s*\n(\s*)COMMIT;',
+        r'\1\n    END IF;\n\2COMMIT;',
         text,
+        flags=re.I,
+    )
+    text = re.sub(
+        r'^(\s+)END\s*\n(\s+)COMMIT;',
+        r'\1END IF;\n\2COMMIT;',
+        text,
+        flags=re.M,
     )
     text = re.sub(
         r'(IF [^\n]+ THEN\n\s*CALL [^;\n]+;)\n(\s*SET p_Resultado)',

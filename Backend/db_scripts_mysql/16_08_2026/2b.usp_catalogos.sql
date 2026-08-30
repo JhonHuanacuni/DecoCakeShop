@@ -55,7 +55,7 @@ CREATE PROCEDURE usp_categoria_obtener(
     IN p_Id VARCHAR(50)
 )
 main: BEGIN
-SET NOCOUNT ON; SELECT * FROM CATEGORIA WHERE IDCATEGORIA=p_Id;
+SELECT * FROM CATEGORIA WHERE IDCATEGORIA=p_Id;
 END$$
 
 DELIMITER ;
@@ -77,7 +77,7 @@ CREATE PROCEDURE usp_categoria_insertar(
 main: BEGIN
 DECLARE v_Id VARCHAR(50);
     IF p_Nombre IS NULL OR TRIM(p_Nombre)='' THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el nombre.'; LEAVE main; END IF;
-    IF EXISTS (SELECT 1 FROM CATEGORIA WHERE NOMBRE=p_Nombre) THEN SET p_Resultado=0; SET p_Mensaje='Ya existe una categoría con ese nombre.'; LEAVE main; END IF; THEN
+    IF EXISTS (SELECT 1 FROM CATEGORIA WHERE NOMBRE=p_Nombre) THEN SET p_Resultado=0; SET p_Mensaje='Ya existe una categoría con ese nombre.'; LEAVE main; END IF;
       CALL usp_siguiente_id('CAT', 'CATEGORIA', 'IDCATEGORIA', v_Id);
     INSERT INTO CATEGORIA (IDCATEGORIA,NOMBRE,DESCRIPCION,ORDEN,ESTADO,CREADOPOR,FECHACREACION,HORACREACION,MODIFICADOPOR,FECHAMODIFICACION,HORAMODIFICACION)
     VALUES (v_Id,p_Nombre,p_Descripcion,IFNULL(p_Orden,0),IFNULL(p_Estado,'Activo'),fn_actor(),fn_fecha_ddmmyyyy(),TIME_FORMAT(NOW(), '%H:%i:%s'),fn_actor(),fn_fecha_ddmmyyyy(),TIME_FORMAT(NOW(), '%H:%i:%s'));
@@ -171,7 +171,7 @@ CREATE PROCEDURE usp_unidad_obtener(
     IN p_Id VARCHAR(50)
 )
 main: BEGIN
-SET NOCOUNT ON; SELECT * FROM UNIDAD WHERE IDUNIDAD=p_Id;
+SELECT * FROM UNIDAD WHERE IDUNIDAD=p_Id;
 END$$
 
 DELIMITER ;
@@ -191,7 +191,7 @@ CREATE PROCEDURE usp_unidad_insertar(
 )
 main: BEGIN
 DECLARE v_Id VARCHAR(50);
-    IF p_Nombre IS NULL OR TRIM(p_Nombre)='' THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el nombre.'; LEAVE main; END IF; THEN
+    IF p_Nombre IS NULL OR TRIM(p_Nombre)='' THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el nombre.'; LEAVE main; END IF;
       CALL usp_siguiente_id('UNI', 'UNIDAD', 'IDUNIDAD', v_Id);
     INSERT INTO UNIDAD (IDUNIDAD,NOMBRE,ABREVIATURA,ESTADO,CREADOPOR,FECHACREACION,HORACREACION,MODIFICADOPOR,FECHAMODIFICACION,HORAMODIFICACION)
     VALUES (v_Id,p_Nombre,p_Abreviatura,IFNULL(p_Estado,'Activo'),fn_actor(),fn_fecha_ddmmyyyy(),TIME_FORMAT(NOW(), '%H:%i:%s'),fn_actor(),fn_fecha_ddmmyyyy(),TIME_FORMAT(NOW(), '%H:%i:%s'));
@@ -282,7 +282,7 @@ CREATE PROCEDURE usp_cliente_obtener(
     IN p_Id VARCHAR(50)
 )
 main: BEGIN
-SET NOCOUNT ON; SELECT * FROM CLIENTE WHERE IDCLIENTE=p_Id;
+SELECT * FROM CLIENTE WHERE IDCLIENTE=p_Id;
 END$$
 
 DELIMITER ;
@@ -305,7 +305,7 @@ CREATE PROCEDURE usp_cliente_insertar(
 )
 main: BEGIN
 DECLARE v_Id VARCHAR(50);
-    IF p_Nombre IS NULL OR TRIM(p_Nombre)='' THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el nombre.'; LEAVE main; END IF; THEN
+    IF p_Nombre IS NULL OR TRIM(p_Nombre)='' THEN SET p_Resultado=0; SET p_Mensaje='Ingresa el nombre.'; LEAVE main; END IF;
       CALL usp_siguiente_id('CLI', 'CLIENTE', 'IDCLIENTE', v_Id);
     INSERT INTO CLIENTE (IDCLIENTE,NOMBRE,DOCUMENTO,TELEFONO,EMAIL,DIRECCION,ESTADO,CREADOPOR,FECHACREACION,HORACREACION,MODIFICADOPOR,FECHAMODIFICACION,HORAMODIFICACION)
     VALUES (v_Id,p_Nombre,p_Documento,p_Telefono,p_Email,p_Direccion,IFNULL(p_Estado,'Activo'),fn_actor(),fn_fecha_ddmmyyyy(),TIME_FORMAT(NOW(), '%H:%i:%s'),fn_actor(),fn_fecha_ddmmyyyy(),TIME_FORMAT(NOW(), '%H:%i:%s'));
@@ -417,7 +417,7 @@ CREATE PROCEDURE usp_formapago_obtener(
     IN p_Id VARCHAR(50)
 )
 main: BEGIN
-SET NOCOUNT ON; SELECT * FROM FORMA_PAGO WHERE IDFORMAPAGO=p_Id;
+SELECT * FROM FORMA_PAGO WHERE IDFORMAPAGO=p_Id;
 END$$
 
 DELIMITER ;
@@ -525,8 +525,7 @@ CREATE PROCEDURE usp_tipoentrega_obtener(
     IN p_Id VARCHAR(50)
 )
 main: BEGIN
-SET NOCOUNT ON;
-    SELECT IDTIPOENTREGA, NOMBRE, REQUIEREDIRECCION,
+SELECT IDTIPOENTREGA, NOMBRE, REQUIEREDIRECCION,
            CASE WHEN REQUIEREDIRECCION=1 THEN 'Sí' ELSE 'No' END AS REQUIEREDIRECCION_TXT, ESTADO
     FROM TIPO_ENTREGA WHERE IDTIPOENTREGA=p_Id;
 END$$
