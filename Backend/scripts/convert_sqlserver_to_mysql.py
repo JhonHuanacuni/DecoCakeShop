@@ -981,6 +981,17 @@ def convert_file_content(content: str, rel_path: str) -> str:
 
 
 def polish_mysql(text: str) -> str:
+    # SQL Server: COL TYPE NOT NULL FOREIGN KEY REFERENCES T(C)
+    # MySQL: COL TYPE NOT NULL, FOREIGN KEY (COL) REFERENCES T(C)
+    text = re.sub(
+        r'(\w+)\s+'
+        r'((?:VARCHAR|CHAR|LONGTEXT|DECIMAL|TINYINT|INT)(?:\s*\(\s*[\d,]+\s*\))?)\s+'
+        r'(NULL|NOT NULL)\s+'
+        r'FOREIGN KEY REFERENCES\s+(\w+)\s*\(\s*(\w+)\s*\)',
+        r'\1 \2 \3,\n    FOREIGN KEY (\1) REFERENCES \4(\5)',
+        text,
+        flags=re.I,
+    )
     text = text.replace('@ObsFROM', 'v_Obs FROM')
     text = re.sub(
         r'BEGIN SET (p_Resultado=0); SET (p_Mensaje=[^;]+); LEAVE main; END',

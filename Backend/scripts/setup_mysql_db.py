@@ -256,6 +256,10 @@ def main():
                 f'CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci'
             )
             conn.select_db(db_name)
+            try:
+                cur.execute('SET FOREIGN_KEY_CHECKS = 0')
+            except pymysql.err.OperationalError:
+                pass
 
             if args.skip_import:
                 if _db_ready(cur, db_name):
